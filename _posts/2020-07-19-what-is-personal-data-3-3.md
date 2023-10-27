@@ -101,7 +101,7 @@ public_data=# SELECT * FROM example;
 Now i have the geometry value populated, ill see if i can get it rendered on the regola server.
 
 I installed pgadmin and connected it to the postgresql database as its much easier to manage the data with a GUI.
-![](images/pgadmin.png)
+![](/images/pgadmin.png)
 
 If you run into a problem, you can delete everything from a table in postgres using truncate `truncate table example;`
 
@@ -486,14 +486,14 @@ Notice that ive set the zoom layers so something sensible, as i dont want all da
 So now, lets fire up the server. `./tegola serve --config=config.toml`
 
 Open up a browser on localhost:8080 and i can see that the Reading roads have rendered!
-![](images/reading-tegola.png)
+![](/images/reading-tegola.png)
 
 The second i zoom in, i can see a huge amount of information.
-![](images/zoom.png)
+![](/images/zoom.png)
 
 In the interest of complete visibilty, i goofed up. For some reason, i tried sorted the data in excel for the land registry data and i ended up completely misalligning the data columns for latitude. Rather than re-running the entire dataset (the HUGE dataset) through the google API again (i'd have to sign up for a free trial) i ended up just using a smaller dataset that i had saved from a dry run. So for the land registry data, i _only_ am using 17,000 records (as opposed to 158,225 initially retrieved). So i am plotting barely 10% of the land registry data i could have - so there should be a LOT more yellow dots.
 
-![](images/openreg-1.png)
+![](/images/openreg-1.png)
 
 By using the Inspect Features utility at the bottom, i can hover over a data point and see the information ive extracted by the query. Here i have deselected companiesHouseOfficers and pricePaid and just left the open register data on. Ive zoomed in on a random area near the town center. When you look at data in a database or spreadsheet, i find that it dosent really mean much to you. 1000 records in a database is kind of difficult to realise just how powerful that information is. By plotting on a map, I feel you can get more of a feel for what that data means and how powerful that information is. Ive purposely not shown the above people specific address on the screenshot, but the point is I could have. I have that data as it is free and open. Again, the whole point in this series is to try and understand whether or not this IS private information? Evidently - to these people its not.
 

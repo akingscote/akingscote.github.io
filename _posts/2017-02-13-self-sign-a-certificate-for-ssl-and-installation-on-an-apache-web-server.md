@@ -8,7 +8,7 @@ coverImage: "SSL_featured_image-320x240.jpg"
 
 This guide is a simple demonstration on how you can self sign a certificate for use in SSL and install on an Apache Web Server. Open-SSL will be used in a Windows OS Desktop and the certificate will be imported into the web server.
 
-Firstly, ensure you have an Ubuntu Apache Web Server up and running. You can download the Ubuntu Server ISO from [here](http://www.ubuntu.com/download/server/thank-you?version=16.04.1&architecture=amd64). Im just running mine in a virtual machine. Ensure you know the root password when creating the server.
+Firstly, ensure you have an Ubuntu Apache Web Server up and running. You can download the Ubuntu Server ISO from [here](https://www.ubuntu.com/download/server/thank-you?version=16.04.1&architecture=amd64). Im just running mine in a virtual machine. Ensure you know the root password when creating the server.
 
 The following are prerequisites for the the server in order to implement the steps detailed for SSL implementation:
 
@@ -20,11 +20,7 @@ Log into the server as root, or log in as a user and issue a `sudo su` to change
 
 This opens up the interfaces file using the nano text editor. You could replace `nano` with `vi` to use the vi editor or `gedit` to use the gedit editor.
 
-‘#’ comments out a line. If the keyboard is in the default (American) layout, the # can be accessed by pressing SHIFT + 3.
-
-[![](images/1-Static-Network-Settings-300x159.jpg)](../images/1-Static-Network-Settings.jpg)
-
- 
+`#` comments out a line. If the keyboard is in the default (American) layout, the # can be accessed by pressing SHIFT + 3.
 
 `auto ens33` `iface ens33 inet static` `address` `netmask` `gateway` `dns-nameservers` Press CTRL + X then press Y to save and exit the editor.
 

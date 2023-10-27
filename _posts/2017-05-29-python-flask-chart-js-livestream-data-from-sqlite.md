@@ -14,7 +14,7 @@ tags:
   - "python"
 ---
 
-This post is an example of how to present a live stream of Timeseries data from an SQLite database hosted on Flask and using Chart JS. There are a number of Python charting modules (like Bokeh) but by using Javascript, it takes _some_ of the strain away from the server and onto the client (unless Flask isnt being externally hosted). The example im about to show you uses [ChartJS](http://www.chartjs.org/) which is an open source Javascript HTML5 chart generator. There are some great alternatives out there like Highcharts but ChartJS has the huge advantage of being open source.
+This post is an example of how to present a live stream of Timeseries data from an SQLite database hosted on Flask and using Chart JS. There are a number of Python charting modules (like Bokeh) but by using Javascript, it takes _some_ of the strain away from the server and onto the client (unless Flask isnt being externally hosted). The example im about to show you uses [ChartJS](https://www.chartjs.org/) which is an open source Javascript HTML5 chart generator. There are some great alternatives out there like Highcharts but ChartJS has the huge advantage of being open source.
 
 Flask applications typically use SQLite but they dont have too. SQLite is a single file database so its lightweight (although it dosent have to be small). They are prefered to single file storage as you can query an SQLlite database for fast results and they are also more compact in size.
 
@@ -183,7 +183,7 @@ labels: ['value1 label', 'value2 label', value3 label',
 }
 ```
 
-You can always see the ChartJS documentation for reference - http://www.chartjs.org/docs/latest/
+You can always see the ChartJS documentation for reference - https://www.chartjs.org/docs/latest/
 
 So thats the inital data sorted, but we need to specify the options for the chart such as what time of chart it is, what are the scales, font size etc..
 ```

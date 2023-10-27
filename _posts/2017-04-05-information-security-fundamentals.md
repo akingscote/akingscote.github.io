@@ -10,9 +10,9 @@ In this post, I’ll try to simplify some of the terminology and concepts within
 
 # CIA Triad
 
-The term CIA triad refers to the balance of Confidentiality, Integrity and Availability within information security. Similar to the [fire triangle](http://www.sc.edu/ehs/modules/Fire/01_triangle.htm),  all elements must be present in order for the aim to be achieved of having a secure system. It is one of many security policies to help ensure people are thinking about vulnerabilities within their infrastructures.
+The term CIA triad refers to the balance of Confidentiality, Integrity and Availability within information security. Similar to the [fire triangle](https://www.sc.edu/ehs/modules/Fire/01_triangle.htm),  all elements must be present in order for the aim to be achieved of having a secure system. It is one of many security policies to help ensure people are thinking about vulnerabilities within their infrastructures.
 
-![](images/CIA-Triad.png)
+![](/images/CIA-Triad.png)
 
 # Confidentiality
 
@@ -79,7 +79,7 @@ Whenever your password is stored anywhere (like on say facebooks database), they
 A good way to visualise hashing is to try the following exercise:
 
 1. Pick an actual word for a password (one that is on Wikipedia or in the Oxford dictionary).
-2. Go to [miraclesalad’s hash generator](http://www.miraclesalad.com/webtools/md5.php) and apply the MD5 hashing algorithm onto your password.
+2. Go to [miraclesalad’s hash generator](https://www.miraclesalad.com/webtools/md5.php) and apply the MD5 hashing algorithm onto your password.
 
 ![](/images/md5-hash-300x269.jpg)
 
