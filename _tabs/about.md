@@ -3,6 +3,10 @@
 icon: fas fa-info-circle
 order: 4
 ---
+![](/images/headshot.png)
 
-> Add Markdown syntax content to file `_tabs/about.md`{: .filepath } and it will show up on this page.
-{: .prompt-tip }
+
+
+Ashley Kingscote is **Cloud Security Engineer** currently working for [ImmersiveLabs](https://www.immersivelabs.com/)
+
+Email: `ashleykingscote@hotmail.co.uk`
