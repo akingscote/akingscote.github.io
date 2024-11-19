@@ -173,7 +173,7 @@ Therefore the answer is 172.20.84.255
 ## You are designing a subnet mask for the 192.168.97.0 network. You want 6 subnets with up to 16 hosts on each subnet. What subnet mask should you use?
 
 We want 16 hosts on each subnet. Look at host portion
-
+```
 0          2**1**-2 = 0
 00         2**2**-2 = 2
 000        2**3**-2 = 6
@@ -183,6 +183,7 @@ We want 16 hosts on each subnet. Look at host portion
 0000000    2**7**-2 = 126
 00000000   2**8**-2 = 254
 000000000  2**9**-2 = 510
+```
 
 The only one that will give us 16 hosts, is 2**5**-2 = 30 which is 00000. So the last octet will look like
 
