@@ -1,6 +1,6 @@
 ---
 title: "Log Poisoning in Microsoft Sentinel"
-date: "2024-11-20"
+date: "2024-11-27"
 categories: 
   - "cloud"
   - "security"
@@ -640,8 +640,9 @@ Using `application/xml` as the Content-Type even seems to work for JSON data ðŸ¤
 `_` prefixed columns are used to specify metadata in Azure logs. 
 For example, in the [Heartbeat table schema](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/heartbeat#columns) there are columns for `_BilledSize`, `_ResourceID` and `_IsBillable`.
 
-I've not tried setting `_IsBillable` to false, to determine if I can get away with some free log ingestion.
+`_IsBillable` dosent seem to be set via headers.
 The same metadata colums exist for the [Syslog schema](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/syslog#columns) and [WindowsEvent schema](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/windowsevent#columns) and the [Event](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/tables/event#columns) schema.
+`Heartbeat` data is free, by `Syslog` and `Event` data is not. 
 
 ## Timestamps
 Spoofing the timestamps in all of the logs is also an interesting topic.
@@ -802,7 +803,7 @@ if __name__ == "__main__":
 ```
 Add in your subscription ID, workspace ID and ingestion token, and this will create spoofed logs inside the `Heartbeat` table.
 
-In theory, you could spam this endpoint with millions log logs, and rack up an eyewatering bill.
+In theory, you could spam this endpoint with millions log, although `Heartbeat` data is not billable (`_IsBillable` is `False`).
 
 ## Spoofing Windows
 For Windows machines, the payload needs to be in XML format. I grabbed an example upload from the proxy, and had to modify some of the XML fields and attributes in order to have a successful spoof.
@@ -1032,7 +1033,7 @@ Case number: `91889`
 - 15th October 2024 - Status changed to `Review/Repro`
 - 27th October 2024 - I chased for an update
 - 11th November 2024 - I chased for an update
-- 12th November 2024 - Determined to be low severity, caes closed
+- 12th November 2024 - Determined to be low severity, case closed
 
 ## Up Next
 I will upload a complete code and walkthrough, including all the terraform, commands and python needed to reproduce this finding.
