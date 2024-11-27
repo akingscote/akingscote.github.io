@@ -12,14 +12,15 @@ tags:
   - "msrc"
 coverImage: "msft-sentinel-log-poison.png"
 ---
-I decided recently to dip my toe into security research in my spare time. This post is a writeup of some interesting goofiness that I found when playing around with Microsoft Sentinel Log Poisoning. I've not updated this blog in years, but hopefully this absolute monster of a post makes up for it.
+This post is a writeup of some interesting goofiness that I found when playing around with Microsoft Sentinel Log Poisoning. I've not updated this blog in years, but hopefully this absolute monster of a post makes up for it.
+
+The title is a bit clickbaity - its really Log Spoofing, rather than strictly Log Poisoning. I am fully aware that this isnt a vulnerability, but I think it does reveal some useful insights into Log Ingestion in Microsoft Sentinel.
 
 I raised the findings with [Microsoft Security Response Center (MSRC)](https://msrc.microsoft.com/), who after doing very little for a month, closed the case (`91889`) as low severity, which means I can finally write about it.
 
 In writing this post, i realised that there is quite a bit of assumed learning, so i've tried to provide a relatively high level introduction, before exploring the Log Poisioning findings.
 
-Here is the video demonstration, but if you want to learn more, grab a coffee and read on ☕
-
+[Here](https://youtu.be/o6voS7E3Bp8) is the video demonstration, but if you want to learn more, grab a coffee and read on ☕
 
 ## What is Microsoft Sentinel?
 Microsoft Sentinel is a Security Information and Event Management (SIEM) and a Security Orchestration, Automation and Response (SOAR) product all in one. It's not only capable of analysing all your logs, but also automatic responses and remediation.
@@ -27,19 +28,19 @@ Microsoft Sentinel is a Security Information and Event Management (SIEM) and a S
 Microsoft Sentinel runs on Microsoft Azure, but its not just for Azure workloads. Microsoft tried to make this distinction clear in renaming the product from "Azure Sentinel" to "Microsoft Sentinel". You can integrate any kind of log into Microsoft Sentinel, from on-premise logs, to AWS workloads.
 
 ## How does Microsoft Sentinel work?
-Behind the scenes, a cloud-scale database is provisoned named an [Azure Log Analytics workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview). All of your logs need to be ingested into this database (more on that later). From there, you can query the data using Microsoft own query language - [Kusto Query Language](https://learn.microsoft.com/en-us/kusto/query)(KQL).
+Behind the scenes, a cloud-scale database ([Azure Log Analytics workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview)) is provisioned. All of your logs need to be ingested into this database (more on that later). From there, you can query the data using Microsoft own query language - [Kusto Query Language](https://learn.microsoft.com/en-us/kusto/query)(KQL).
 
-KQL and Log Analytics workspaces are blazingly fast ⚡. They are designed for querying large volumes of data in next to no time at all. I don't have the statistics, but it has no problem querying hundreds of thousands of records, performing detailed processing and returning the results in seconds.
+KQL and Log Analytics workspaces are blazingly (⚡) fast. They are designed for querying large volumes of data in next to no time at all. I don't have the statistics, but it has no problem querying hundreds of thousands of records, performing detailed processing and returning the results in seconds.
 
 I dont want to downplay Microsoft Sentinel, but its essentially just a wrapper around this database. It streamlines the process for querying data on a schedule, helps to create incidents (and the whole management process around that), maps to security frameworks such as [MITRE ATT&CK](https://attack.mitre.org/), and allows for automated response with integration into Azure Logic Apps (Microsoft Sentinel playbooks).
 
-## Microsoft Sentinel - Analytic Rules & Incidents
+## Microsoft Sentinel - Analytics Rules & Incidents
 Very quickly, I need to explain some of the components of Microsoft Sentinel, to help you understand the impact of this piece of research. 
 
 One of the core components of Microsoft Sentinel is an [analytics rule](https://learn.microsoft.com/en-us/azure/sentinel/scheduled-rules-overview). These rules run on a schedule and execute KQL queries against your dataset.
 ![](../images/log-poisoning/analytics-rule-kql.png)
 
-In the above screenshot, the analytic rule named "SSH - Potential Brute" force contains a pretty long KQL query, which will be ran periodically against the Log Analytics workspace.
+In the above screenshot, the analytics rule named "SSH - Potential Brute" force contains a pretty long KQL query, which will be ran periodically against the Log Analytics workspace.
 
 Within Microsoft Sentinel, there is a Content Hub, which allows you to install a number of Microsoft Sentinel rules/queries into your deployment. For example the Security Threat Essentials solution is created and maintained by Microsoft, and includes 7 analytics rules.
 ![](../images/log-poisoning/content-hub-essentials.png)
@@ -74,18 +75,16 @@ This can be bad for :
 
 As well as the above, in Microsoft Sentinels case, it can also be devastating bad for your wallet 😱
 
-Microsoft Sentinel is a cloud solution - there arent any servers to manage here. As with a lot of cloud products & services, the costs can mount up as you scale. For Log Analytics databases, a successful log poisioning attack could easily result in a [denial of wallet](https://portswigger.net/daily-swig/denial-of-wallet-attacks-how-to-protect-against-costly-exploits-targeting-serverless-setups) attack. Current upload costs for a single Log Analytics workspace depend on your pricing strategy, but if you're on Pay-As-You-Go, its as much as $5.38 per GB.
+Microsoft Sentinel is a cloud solution - there arent any servers to manage here. As with a lot of cloud products & services, the costs can mount up as you scale. For Log Analytics databases, a successful log spoofing attack could easily result in a [denial of wallet](https://portswigger.net/daily-swig/denial-of-wallet-attacks-how-to-protect-against-costly-exploits-targeting-serverless-setups) attack. Current upload costs for a single Log Analytics workspace depend on your pricing strategy, but if you're on Pay-As-You-Go, its as much as $5.38 per GB.
 
 ![](../images/log-poisoning/sentinel-pricing.png)
 
 Lets be clear, uploading 10,000 GB of logs, would cost you $53,800 a day if you are on a Pay-As-You-Go tier!
 
-With the log poisioning approach i'm about to show you, you may not even know that your logs are increasing!
-
-Strictly speaking, this method really is more log-spoofing than log-poisoning.
+With the log spoofing approach i'm about to show you, you may not even know that your logs are increasing!
 
 ## Microsoft Sentinel Log Ingestion
-Before we dive into how the *potential* log poisoning works, you'll need to understand how Microsoft Sentinel log ingestion works.
+Before we dive into how the *potential* log spoofing works, you'll need to understand how Microsoft Sentinel log ingestion works.
 
 You dont ingest logs into Microsoft Sentinel, but rather the Log Analytics workspace (database) behind it. Microsoft Sentinel is "just" a wrapper around the database. So the question become, how do you ingest logs into a Log Analytics workspace?
 
@@ -120,7 +119,7 @@ You can find the source for most [Data Connectors on the official github](https:
 Alongside whatever you have configured, Azure Monitor Agent will also send periodic `Heatbeat` information to Azure. This acts as a keepalive and tells Microsoft Sentinel that the Virtual Machine is behaving as expected and can recieve logs. This is particularly useful when trying to debug any log ingestion issues or delays.
 The `Heartbeat` table is used throughout Microsoft Sentinel to incidate whether your machines are available. Only the AMA can write to the Heartbeat table (or so you'd think 😉)
 
-In the [Azure-Sentinel github repo](https://github.com/Azure/Azure-Sentinel) (can someone please rename it), `Heartbeat` is referenced at least a 1000 times:
+In the [Azure-Sentinel github repo](https://github.com/Azure/Azure-Sentinel) (can someone please rename it to Microsoft Sentinel 🙏), `Heartbeat` is referenced at least a 1000 times:
 ```
 $ grep -ri "Heartbeat" --include "*yaml" --include "*json" | wc -l
 1177
@@ -135,15 +134,15 @@ A DCE endpoint dosent have much too it. Here is the JSON view of my DCE endpoint
 {
     "properties": {
         "description": "a data collection endpoint",
-        "immutableId": "dce-a4aea7fb8c4b4053a10d07c2e0f7a5c2",
+        "immutableId": "dce-a1aea79e14604c709f6d50e6fe5792f1",
         "configurationAccess": {
-            "endpoint": "https://my-dce-7xo3.uksouth-1.handler.control.monitor.azure.com"
+            "endpoint": "https://my-dce-9xl0.uksouth-1.handler.control.monitor.azure.com"
         },
         "logsIngestion": {
-            "endpoint": "https://my-dce-7xo3.uksouth-1.ingest.monitor.azure.com"
+            "endpoint": "https://my-dce-9xl0.uksouth-1.ingest.monitor.azure.com"
         },
         "metricsIngestion": {
-            "endpoint": "https://my-dce-7xo3.uksouth-1.metrics.ingest.monitor.azure.com"
+            "endpoint": "https://my-dce-9xl0.uksouth-1.metrics.ingest.monitor.azure.com"
         },
         "networkAcls": {
             "publicNetworkAccess": "Enabled"
@@ -166,12 +165,12 @@ They essentially define the incoming data stream definition, perform any data tr
 
 A DCR must send to an endpoint; which is either typically a the Log Analytics workspace or the Data Collection Endpoint.
 
-Here is an example of a DCR which collects `Sylog` type data from a Linux Virtual machine, and forwards onto my Log Analytics workspace
+Here is an example of a DCR which collects `Syslog` type data from a Linux Virtual machine, and forwards onto my Log Analytics workspace
 ```
 {
     "properties": {
         "description": "",
-        "immutableId": "dcr-62eeb31f81e64b8daf1393140d61069e",
+        "immutableId": "dcr-d133b230ac9e4bbd95a9092d636d0b7c",
         "dataSources": {
             "syslog": [
                 {
@@ -217,8 +216,8 @@ Here is an example of a DCR which collects `Sylog` type data from a Linux Virtua
         "destinations": {
             "logAnalytics": [
                 {
-                    "workspaceResourceId": "/subscriptions/xxxxxxxxxxxxxxxxxxxxx/resourceGroups/msft-sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel",
-                    "workspaceId": "1827c797-4a4a-4a68-b6f3-xxxxxxxx",
+                    "workspaceResourceId": "/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/msft-sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel",
+                    "workspaceId": "1827c797-4a4a-4a68-b6f3-fb3e3cefd50a",
                     "name": "syslog-live-logs"
                 }
             ]
@@ -238,7 +237,7 @@ Here is an example of a DCR which collects `Sylog` type data from a Linux Virtua
     "location": "uksouth",
     "tags": {},
     "kind": "Linux",
-    "id": "/subscriptions/xxxxxxxxxxxxxxxxxx/resourceGroups/research/providers/Microsoft.Insights/dataCollectionRules/SyslogLive",
+    ...
     "name": "SyslogLive",
     "type": "Microsoft.Insights/dataCollectionRules"
 }
@@ -249,7 +248,7 @@ The Windows equivelant is much simplier:
 {
     "properties": {
         "description": "",
-        "immutableId": "dcr-1316a9fba5154d658ba5a7ea1c3d2eef",
+        "immutableId": "dcr-48a4058f15fd4f6b8d55ac2a1f0ccf66",
         "dataSources": {
             "windowsEventLogs": [
                 {
@@ -267,8 +266,8 @@ The Windows equivelant is much simplier:
         },
         "destinations": {
             "logAnalytics": [
-                {
-                    "workspaceResourceId": "/subscriptions/xxxxxxxxxxxxxxxxxx/resourceGroups/msft-sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel",
+{
+                    "workspaceResourceId": "/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/msft-sentinel/providers/Microsoft.OperationalInsights/workspaces/sentinel",
                     "workspaceId": "1827c797-4a4a-4a68-b6f3-fb3e3cefd50a",
                     "name": "windows-live-logs"
                 }
@@ -287,8 +286,7 @@ The Windows equivelant is much simplier:
         "provisioningState": "Succeeded"
     },
     "location": "uksouth",
-    "tags": {},
-    "id": "/subscriptions/xxxxxxxxxxxxxxxxxx/resourceGroups/research/providers/Microsoft.Insights/dataCollectionRules/WindowsLiveLogs",
+    ...
     "name": "WindowsLiveLogs",
     "type": "Microsoft.Insights/dataCollectionRules"
 }
@@ -300,11 +298,14 @@ This builds a relationship between the VMs, the workspace and the DCE.
 
 You make have noticed that the DCRs reference an `immutableId` field, which is the DCE.
 
-Here, you can see that the Azure Monitor Agent is populated with both the DCR and the DCE
+On the Windows Machine, at `C:\WindowsAzure\Resources\AMADataStore.windows\mcs\mcsconfig.latest.json`, you can see that the Azure Monitor Agent is populated with both the DCR and the DCE.
+
 ![](../images/log-poisoning/windows-dce-dcr.png)
 
+There is also the channel ID, which is the workspace ID `1827c797-4a4a-4a68-b6f3-fb3e3cefd50a`, prefixed with `ods-`.
+
 ## Tables and Custom Tables
-Before we finally get started on Log Poisoning in Microsoft Sentinel, you need to understand that there is a distinction between in-built tables and custom tables.
+Before we finally get started on Log Posioning/Spoofing in Microsoft Sentinel, you need to understand that there is a distinction between in-built tables and custom tables.
 
 In Microsoft Sentinel, there are a number of [Azure data sources](https://learn.microsoft.com/en-us/azure/sentinel/data-source-schema-reference#azure-data-sources). For example, Microsoft Entra can write to the `SigninEvents` table, Linux hosts can write to the `Syslog` table, Network Security Group (NSG) flow logs write to the `AzureNetworkAnalytics` table.
 
@@ -397,7 +398,7 @@ You can force the AMA to go via a HTTP proxy, which is useful for enterprise env
 
 To configure a proxy, you necessarily need direct access to the virtual machine, if you have the required permissiosn, you can configure the VM extension via the CLI:
 ```
-az vm extension set --name AzureMonitorWindowsAgent --publisher Microsoft.Azure.Monitor --vm-name windows-server --resource-group research --settings '{"proxy":{"mode":"application","address":"http://localhost:8080","auth": "false"}}'
+az vm extension set --name AzureMonitorWindowsAgent --publisher Microsoft.Azure.Monitor --vm-name windows --resource-group research --settings '{"proxy":{"mode":"application","address":"http://localhost:8080","auth": "false"}}'
 ```
 This will force the Azure Monitor Agent to use the `http://localhost:8080` proxy.
 
@@ -406,24 +407,24 @@ If using burp, you'll need to unpack compressed requests/responses, as the AMA s
 ![](../images/log-poisoning/burp-unpack.png)
 
 The first request for the AMA is to the following URL:
-`https://global.handler.control.monitor.azure.com/locations/uksouth/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows-server/agentConfigurations?platform=windows&includeMeConfig=true&api-version=2022-06-02`
+`https://global.handler.control.monitor.azure.com/locations/uksouth/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows/agentConfigurations?platform=windows&includeMeConfig=true&api-version=2022-06-02`
 
 which returns this response: 
 
-> "Agent configuration needs to be acquired from 'https://my-dce-l8r4.uksouth-1.handler.control.monitor.azure.com' endpoint which was configured for this resource."
+> "Agent configuration needs to be acquired from 'https://my-dce-9xl0.uksouth-1.handler.control.monitor.azure.com' endpoint which was configured for this resource."
 
 Basically saying, you need to go to the DCE for this resource.
 
 What follows, is requests to the DCE at this URL:
-`https://my-dce-l8r4.uksouth-1.handler.control.monitor.azure.com/locations/uksouth/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows-server/agentConfigurations?platform=windows&includeMeConfig=true&api-version=2022-06-02`
+`https://my-dce-9xl0.uksouth-1.handler.control.monitor.azure.com/locations/uksouth/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows/agentConfigurations?platform=windows&includeMeConfig=true&api-version=2022-06-02`
 
 This request then returns the agent configuration, which is essentially the DCR configuration.
 ```
 {
   "configurations": [
     {
-      "configurationId": "dcr-03afb10bb4f14cd38dd79599ae76f6f2",
-      "eTag": "dcr-03afb10bb4f14cd38dd79599ae76f6f2/%22bf0053cc-0000-1100-0000-66f02f220000%22/%22bf00f9cb-0000-1100-0000-66f02f0b0000%22/%22bf007bcd-0000-1100-0000-66f02f5d0000%22",
+      "configurationId": "dcr-48a4058f15fd4f6b8d55ac2a1f0ccf66",
+      "eTag": "dcr-48a4058f15fd4f6b8d55ac2a1f0ccf66",
       "op": "added",
       "content": {
         "dataSources": [
@@ -445,15 +446,15 @@ This request then returns the agent configuration, which is essentially the DCR 
               }
             ],
             "sendToChannels": [
-              "ods-b3cdb8b1-05e3-415b-a624-5eac3d251889"
+              "ods-1827c797-4a4a-4a68-b6f3-fb3e3cefd50a"
             ]
           }
         ],
         "channels": [
           {
-            "endpoint": "https://b3cdb8b1-05e3-415b-a624-5eac3d251889.ods.opinsights.azure.com",
-            "tokenEndpointUri": "https://my-dce-l8r4.uksouth-1.handler.control.monitor.azure.com/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows-server/agentConfigurations/dcr-03afb10bb4f14cd38dd79599ae76f6f2/channels/ods-b3cdb8b1-05e3-415b-a624-5eac3d251889/issueIngestionToken?operatingLocation=uksouth&platform=windows&includeMeConfig=true&api-version=2022-06-02",
-            "id": "ods-b3cdb8b1-05e3-415b-a624-5eac3d251889",
+            "endpoint": "https://1827c797-4a4a-4a68-b6f3-fb3e3cefd50a.ods.opinsights.azure.com",
+            "tokenEndpointUri": "https://my-dce-9xl0.uksouth-1.handler.control.monitor.azure.com/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows/agentConfigurations/dcr-48a4058f15fd4f6b8d55ac2a1f0ccf66/channels/ods-1827c797-4a4a-4a68-b6f3-fb3e3cefd50a/issueIngestionToken?operatingLocation=uksouth&platform=windows&includeMeConfig=true&api-version=2022-06-02",
+            "id": "ods-1827c797-4a4a-4a68-b6f3-fb3e3cefd50a",
             "protocol": "ods"
           }
         ]
@@ -462,36 +463,7 @@ This request then returns the agent configuration, which is essentially the DCR 
   ]
 }
 ```
-
-The interesting piece in the response is the `tokenEndpointUri`, particularly the `issueIngestionToken` endpoint. Although it does turn out that you can view that same URL, but opening the AMA configuration file (more on that later).
-
-What follows is a request to that endpoint, which returns an **ingestionToken**.
-
-The ingestion token is a JWT, which can be easily be decoded, and looks as follows:
-```
-{
-  "aud": "https://monitor.azure.com/",
-  "iss": "https://sts.windows.net/1559ef53-2b0e-4395-b2ef-36f1288f40da/",
-  "iat": 1727016607,
-  "nbf": 1727016607,
-  "exp": 1727103307,
-  "aio": "E2dgYJibWt1YLns2t+Yap+dsFd12AA==",
-  "appid": "b485b1f5-5a3a-47c1-933c-18abd9565d58",
-  "appidacr": "2",
-  "idp": "https://sts.windows.net/1559ef53-2b0e-4395-b2ef-36f1288f40da/",
-  "idtyp": "app",
-  "oid": "cca4c1a5-87e6-43ac-bd3d-15a7924bef4b",
-  "rh": "0.AXoAU-9ZFQ4rlUOy7zbxKI9A2ge9M-nu0h1Pkzw3UrgZVnvmAAA.",
-  "sub": "cca4c1a5-87e6-43ac-bd3d-15a7924bef4b",
-  "tid": "1559ef53-2b0e-4395-b2ef-36f1288f40da",
-  "uti": "BJNsC75MCUS_UY2T6T0tAA",
-  "ver": "1.0",
-  "xms_idrel": "7 18",
-  "xms_mirid": "/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourcegroups/research/providers/Microsoft.Compute/virtualMachines/windows-server"
-}
-```
-The interesting parameters here are the `exp` and the `xms_mirid` fields.
-The ingestion token is valid for **1 day** after being requested.
+The interesting piece in that response is the `tokenEndpointUri`. Although it does turn out that you can view that same URL, by opening the AMA configuration file (more on that later) on the VM, or even infer it from your DCE, DCR and Workspace ID.
 
 Once you have an ingestion token, the actual data upload begins.
 
@@ -542,7 +514,7 @@ curl -H "Metadata: true" "http://169.254.169.254/metadata/identity/oauth2/token?
 
 Your response will look like this:
 ```
-{"access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Inp4ZWcyV09OcFRrd041R21lWWN1VGR0QzZKMCIsImtpZCI6Inp4ZWcyV09OcFRrd041R21lWWN1VGR0QzZKMCJ9.eyJhdWQiOiJodHRwczovL21vbml0b3IuYXp1cmUuY29tIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvMTU1OWVmNTMtMmIwZS00Mzk1LWIyZWYtMzZmMTI4OGY0MGRhLyIsImlhdCI6MTczMjYxMjA4NSwibmJmIjoxNzMyNjEyMDg1LCJleHAiOjE3MzI2OTg3ODUsImFpbyI6ImsyQmdZS2p2N2RtejVGeVNUSXVOdnNOMGdjM2ZBUT09IiwiYXBwaWQiOiI5NjRmZmNjMy1jOWE0LTRhOTktOGZjNy0zNDc5MzM4MDMxMzciLCJhcHBpZGFjciI6IjIiLCJpZHAiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8xNTU5ZWY1My0yYjBlLTQzOTUtYjJlZi0zNmYxMjg4ZjQwZGEvIiwiaWR0eXAiOiJhcHAiLCJvaWQiOiI2YzFlNjhjNC1kMzZjLTRmZmMtYTUxYi0wYjZhNmJjNDFkZWQiLCJyaCI6IjEuQVhvQVUtOVpGUTRybFVPeTd6YnhLSTlBMmdlOU0tbnUwaDFQa3p3M1VyZ1pWbnZtQUFCNkFBLiIsInN1YiI6IjZjMWU2OGM0LWQzNmMtNGZmYy1hNTFiLTBiNmE2YmM0MWRlZCIsInRpZCI6IjE1NTllZjUzLTJiMGUtNDM5NS1iMmVmLTM2ZjEyODhmNDBkYSIsInV0aSI6IklIWnY1MXFYTmt1eDRxSFdhTUZKQUEiLCJ2ZXIiOiIxLjAiLCJ4bXNfaWRyZWwiOiI3IDEwIiwieG1zX21pcmlkIjoiL3N1YnNjcmlwdGlvbnMvZmRjMjQxNDEtOTAwOC00NWQxLWE3NDktZmE5OTBkNDJhMDE1L3Jlc291cmNlZ3JvdXBzL3Jlc2VhcmNoL3Byb3ZpZGVycy9NaWNyb3NvZnQuQ29tcHV0ZS92aXJ0dWFsTWFjaGluZXMvd2luZG93cyJ9.Alr_RnPcHz5yFYWw1jrnsVLsJGt2jtYEN-xzdTZpZR6a3GKf547tDQgAJVnvw33ikyI076dLytI_BnOJWsxipunK6cOzDNtocKLaRyYIJ3qFie5A_Lxlx5UJbIBD86o3xiy2xmUC7R2RvSX4hiy09Q5OEp9d6HT2Mmlar4NkIOivhY-IMueF2TZ0QPiObfG4i9VtG1qtm2mZljoxwPQQUAJMAnwceabGZqbsSfnvXW7fiRF-RrMBK6Xop3rVTd-sZhw8bm242Sf0TZS4vlUfN2FAXRWTdJe3xuJotFJS8fWWgfA6EPU_NkKypklQiOOyGTdx_uHFhUTNWBibVgb3ww","client_id":"964ffcc3-c9a4-4a99-8fc7-347933803137","expires_in":"84649","expires_on":"1732698785","ext_expires_in":"86399","not_before":"1732612085","resource":"https://monitor.azure.com","token_type":"Bearer"}
+{"access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Inp4ZWcyV09OcFRrd041R21lWWN1VGR0QzZKMCIsImtpZCI6Inp4ZWcyV09OcFRrd041R21lWWN1VGR0QzZKMCJ9.eyJhdWQiOiJodHRwczovL21vbml0b3IuYXp1cmUuY29tIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvMTU1OWVmNTMtMmIwZS00Mzk1LWIyZWYtMzZmMTI4OGY0MGRhLyIsImlhdCI6MTczMjY1MDgxNSwibmJmIjoxNzMyNjUwODE1LCJleHAiOjE3MzI3Mzc1MTUsImFpbyI6ImsyQmdZRGp6WklFbDMrMTJneTBUSm9WUFREVmhCQUE9IiwiYXBwaWQiOiIxMmIzMTA3NS00OWY4LTQyOTgtYTIzNy05ZWJjM2U1NDcwNmQiLCJhcHBpZGFjciI6IjIiLCJpZHAiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8xNTU5ZWY1My0yYjBlLTQzOTUtYjJlZi0zNmYxMjg4ZjQwZGEvIiwiaWR0eXAiOiJhcHAiLCJvaWQiOiIxMDNkNzAzMi1jNTRjLTQ0Y2EtOWE5ZS00NmIyMjliNTc4MzYiLCJyaCI6IjEuQVhvQVUtOVpGUTRybFVPeTd6YnhLSTlBMmdlOU0tbnUwaDFQa3p3M1VyZ1pWbnZtQUFCNkFBLiIsInN1YiI6IjEwM2Q3MDMyLWM1NGMtNDRjYS05YTllLTQ2YjIyOWI1NzgzNiIsInRpZCI6IjE1NTllZjUzLTJiMGUtNDM5NS1iMmVmLTM2ZjEyODhmNDBkYSIsInV0aSI6InU4MndsbmNnUlUtNHFJdXlQWW1HQUEiLCJ2ZXIiOiIxLjAiLCJ4bXNfaWRyZWwiOiIyOCA3IiwieG1zX21pcmlkIjoiL3N1YnNjcmlwdGlvbnMvZmRjMjQxNDEtOTAwOC00NWQxLWE3NDktZmE5OTBkNDJhMDE1L3Jlc291cmNlZ3JvdXBzL3Jlc2VhcmNoL3Byb3ZpZGVycy9NaWNyb3NvZnQuQ29tcHV0ZS92aXJ0dWFsTWFjaGluZXMvd2luZG93cyJ9.ZAf8385yrrUusLGu_3kJfloY380YAm_yT1b99Cnkatd3UsYWgpfbXXqIke54XCrFW2sTcDtWsF5JJXR0Nms_KruFkvbnwoxNpoBbPG57PxCuXg5wNGDgAQYCV6kr51W2rHokPeiCy6xYvpKUmZoof0fnihYIxMDvn4ngp6sKKudlq6ZYiANFFKm-y3AKIZStM3D8UlESwX5G7jSMtpWfxkb90S5B08wMC4n9SJn0rQEM50ao7urF0zQdZPrUqsjmcjdJnWT-KZ0n9ja7i3lo3B-nCdjL211j8301QEepHmVpIfKPKveZEz7GUmElZToruxbgUn1AzfRedJx_vPZqcA","client_id":"12b31075-49f8-4298-a237-9ebc3e54706d","expires_in":"86400","expires_on":"1732737515","ext_expires_in":"86399","not_before":"1732650815","resource":"https://monitor.azure.com","token_type":"Bearer"}
 ```
 
 Decoding the `access_token` JWT, you will see a `xms_mirid` claim, which is the Microsoft Resource ID of this resource. E.g.
@@ -557,18 +529,20 @@ From that access token, we now need to request an `ingestionToken`, which we can
 
 If you didn't know the DCE endpoint, you could either grab the data from the configuration file (it dosent require admin permissions), or potentially you can determine it by further metadata calls, or by viewing AMA logs.
 
-For WIndows, you can view the configuration file here: `C:\WindowsAzure\Resources\AMADataStore.windows\mcs\mcsconfig.latest.json`
-![](../images/log-poisoning/mcs-datastore.png)
+For Windows, you can view the configuration file here: `C:\WindowsAzure\Resources\AMADataStore.windows\mcs\mcsconfig.latest.json`
+![](../images/log-poisoning/windows-dce-dcr.png)
 
+For Windows VMs, the `issueIngestionToken` token looks like:`https://my-dce-9uo6.uksouth-1.handler.control.monitor.azure.com/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows/agentConfigurations/dcr-48a4058f15fd4f6b8d55ac2a1f0ccf66/channels/ods-1827c797-4a4a-4a68-b6f3-fb3e3cefd50a/issueIngestionToken?operatingLocation=uksouth&platform=windows&api-version=2022-06-02`
 
-For Windows VMs, the `issueIngestionToken` token looks like:`https://my-dce-9uo6.uksouth-1.handler.control.monitor.azure.com/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/windows/agentConfigurations/dcr-fc14f47e3f584e039ec8e7084df45ed7/channels/ods-b3cdb8b1-05e3-415b-a624-5eac3d251889/issueIngestionToken?operatingLocation=uksouth&platform=windows&api-version=2022-06-02`
+For Linux VMs, you can view the configration file here (as root): `/etc/opt/microsoft/azuremonitoragent/config-cache/mcsconfig.lkg.json`
+![](../images/log-poisoning/linux-mcsconfig-json.png)
 
-For Linux VMs, the `issueIngestionToken` token looks like: `https://my-dce-9uo6.uksouth-1.handler.control.monitor.azure.com/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/research-linux/agentConfigurations/dcr-e3446e4a4cf2448094b573ede3c47f61/channels/ods-b3cdb8b1-05e3-415b-a624-5eac3d251889/issueIngestionToken?operatingLocation=uksouth&platform=linux&includeMeConfig=true&api-version=2022-06-02`
+For Linux VMs, the `issueIngestionToken` token looks like: `https://my-dce-9uo6.uksouth-1.handler.control.monitor.azure.com/subscriptions/fdc24141-9008-45d1-a749-fa990d42a015/resourceGroups/research/providers/Microsoft.Compute/virtualMachines/research-linux/agentConfigurations/dcr-d133b230ac9e4bbd95a9092d636d0b7c/channels/ods-1827c797-4a4a-4a68-b6f3-fb3e3cefd50a/issueIngestionToken?operatingLocation=uksouth&platform=linux&includeMeConfig=true&api-version=2022-06-02`
 
 There are three configuration items here which arent obvious at first:
 1. The domain `https://my-dce-9uo6.uksouth-1.handler.control.monitor.azure.com`. That is the DCE endpoint domain.
-2. `dcr-e3446e4a4cf2448094b573ede3c47f61` - this is the DCR immutable ID
-3. `ods-b3cdb8b1-05e3-415b-a624-5eac3d251889` - this just is `ods-` suffixed with the Log Analytics workspace ID.
+2. `dcr-d133b230ac9e4bbd95a9092d636d0b7c` - this is the DCR immutable ID
+3. `ods-1827c797-4a4a-4a68-b6f3-fb3e3cefd50a` - this just is `ods-` suffixed with the Log Analytics workspace ID.
 
 To get an ingestion token, its just a HTTP GET request to that URL, setting your `access_token` as the `"Authorization": "Bearer xxxxx` header. I also copied the user-agent headers which were visible in the burp proxy.
 
@@ -996,12 +970,6 @@ Now you've seen how to spoof logs, its important to reiterate the impact this ca
 
 Most of these out the box queries all assume that the data source is trusted. Once the integrity of the data source is questioned, it undermines Microsoft Sentinel as a security product.
 
-# Results
-Here is a video demonstration of me spoofing Heartbeat logs, Windows Logs, and Linux logs.
-
-I have a couple of analytic rules running on a schedule, to show that I am creating incidents for resources which dont actually exist.
-My KQL queries are irrelevant, im just proving that my spoofed data looks and behaves as normal data.
-
 ## Mitigations
 ### Microsoft could improve things...
 When I submitted this to Microsoft, I submitted a potentially quick and easy fix which would reduce effectiveness of this exploit.
@@ -1039,10 +1007,16 @@ Usage
 
 Running something like the above in a scheduled analytics rule could trigger an incident, if you suddenly experience a huge influx of expensive logs being ingested.
 
+## Demonstration
+I've uploaded a supporting video demonstration here -> [https://youtu.be/o6voS7E3Bp8](https://youtu.be/o6voS7E3Bp8)
+
+I have a an analytics rule running on a schedule, to show that I am creating incidents for resources which dont actually exist.
+My KQL queries are irrelevant, im just proving that my spoofed data looks and behaves as normal data.
+
 ## Conclusion
 Ultimately, its technically possible to undermine the integrity of the logs in Microsoft Sentinel.
 
-Although you can write to the Syslog table via the log ingestionh API, this methods shows that you can do it indirectly without any additional Azure RBAC permissions.
+Although you can write to the Syslog table via the log ingestion API, this methods shows that you can do it indirectly without any additional Azure RBAC permissions.
 
 It also shows that you can write to tables that arent possible via the log ingestion API, such as Event and the Heartbeat table.
 
@@ -1061,6 +1035,6 @@ Case number: `91889`
 - 12th November 2024 - Determined to be low severity, caes closed
 
 ## Up Next
-I will upload a complete code and walkthrough, including all the terraform, command and python needed to reproduce this finding.
+I will upload a complete code and walkthrough, including all the terraform, commands and python needed to reproduce this finding.
 
 I have another finding that has also gone through the responsible disclosure process, so watch this space in the coming weeks (likely months) for my next writeup on: Microsoft Azure Virtual Machines - Cross-Tenant Domain Joining.
