@@ -23,29 +23,29 @@ Find Rainmeter in your taskbar and right click it. Hover over _illustro\\Welcome
 You will notice that the welcome message has disappeared.
 
 You can download the improved illustro skin for your team using the links bellow:
-- [Arsenal](/assets/rainmeter/old/Arsenal.zip)
-- [Aston Villa](/assets/rainmeter/old/Aston-Villa.zip)
-- [Bournemouth](/assets/rainmeter/old/Bournemouth.zip)
-- [Burnley](/assets/rainmeter/old/Burnley.zip)
-- [Chelsea](/assets/rainmeter/old/Chelsea.zip)
-- [Crystal Palace](/assets/rainmeter/old/Crystal-Palace.zip)
-- [Everton](/assets/rainmeter/old/Everton.zip)
-- [Hull](/assets/rainmeter/old/Hull.zip)
-- [Leicester](/assets/rainmeter/old/Leicester.zip)
-- [Liverpool](/assets/rainmeter/old/Liverpool.zip)
-- [Man City](/assets/rainmeter/old/Man-City.zip)
-- [Man Utd](/assets/rainmeter/old/Man-Utd.zip)
-- [Middlesbrough](/assets/rainmeter/old/Middlesbrough.zip)
-- [Newcastle](/assets/rainmeter/old/Newcastle.zip)
-- [Norwich](/assets/rainmeter/old/Norwich.zip)
-- [Southampton](/assets/rainmeter/old/Southampton.zip)
-- [Stoke](/assets/rainmeter/old/Stoke.zip)
-- [Sunderland](/assets/rainmeter/old/Sunderland.zip)
-- [Swansea](/assets/rainmeter/old/Swansea.zip)
-- [Tottenham](/assets/rainmeter/old/Tottenham.zip)
-- [Watford](/assets/rainmeter/old/Watford.zip)
-- [West Brom](/assets/rainmeter/old/West-Brom.zip)
-- [West Ham](/assets/rainmeter/old/West-Ham.zip)
+- ~~[Arsenal]()~~
+~~- [Aston Villa]()~~
+~~- [Bournemouth]()~~
+~~- [Burnley]()~~
+~~- [Chelsea]()~~
+~~- [Crystal Palace]()~~
+~~- [Everton]()~~
+~~- [Hull]()~~
+~~- [Leicester]()~~
+~~- [Liverpool]()~~
+~~- [Man City]()~~
+~~- [Man Utd]()~~
+~~- [Middlesbrough]()~~
+~~- [Newcastle]()~~
+~~- [Norwich]()~~
+~~- [Southampton]()~~
+~~- [Stoke]()~~
+~~- [Sunderland]()~~
+~~- [Swansea]()~~
+~~- [Tottenham]()~~
+~~- [Watford]()~~
+~~- [West Brom]()~~
+~~- [West Ham]()~~
 
 I have added to the stand illustro skin for every team in the premier league plus Newcastle United, Norwich and Aston Villa. **This will only work for team fixtures in the next 30 days**. If you want a skin for a team that isn’t provided, you’ll have to follow the below steps or edit one of the provided skins.
 

@@ -79,7 +79,27 @@ In my web app, im using pymongo to connect to a mongoDB server which runs on the
 
 For the single requests, such as get fixture or delete fixture, i provide the ID of the record i want to delete in the URL request. This makes the sever API very simple.
 
-\[code language="python"\] from bson.objectid import ObjectId from bson.errors import InvalidId ... @app.route('/api/{}/delete\_fixture'.format(api\_version), methods=\["DELETE"\]) def deleteFixture(): id = request.args.get("id") if id == None: return jsonify("request must contain id in url. e.g localhost:5000/api/v1/delete\_fixture?id=12345678") mydatabase = client\["wednesdayfootball"\] try: query = { '\_id' : ObjectId(id) } except InvalidId: return jsonify("provided ID is invalid - {}".format(id)) record = mydatabase.games.delete\_one(query) if record.deleted\_count == 1: return jsonify("record deleted") return jsonify("ID - {} not deleted in mongo db wednesdayfootball fixtures db".format(id)) \[/code\]
+```
+from bson.objectid import ObjectId
+from bson.errors import InvalidId
+...
+@app.route('/api/{}/delete_fixture'.format(api_version), methods=["DELETE"])
+def deleteFixture():
+    id = request.args.get("id")
+    if id == None:
+        return jsonify("request must contain id in url. e.g localhost:5000/api/v1/delete_fixture?id=12345678")
+    mydatabase = client["wednesdayfootball"]
+    try:   
+        query = {
+            '_id' : ObjectId(id)
+        }
+    except InvalidId:
+        return jsonify("provided ID is invalid - {}".format(id))
+    record = mydatabase.games.delete_one(query)
+    if record.deleted_count == 1:
+        return jsonify("record deleted")
+    return jsonify("ID - {} not deleted in mongo db wednesdayfootball fixtures db".format(id))
+```
 
 Then, in my Javascript, all i need to do is call HTTP DELETE to the delete fixture url suffixed with "?id=xxxxxx"
 
