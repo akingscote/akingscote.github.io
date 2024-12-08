@@ -1,6 +1,6 @@
 ---
 title: "Microsoft Azure Cross Tenant Azure AD Domain Join & RBAC Goofiness"
-date: "2024-11-27"
+date: "2024-12-08"
 categories: 
   - "cloud"
   - "security"
