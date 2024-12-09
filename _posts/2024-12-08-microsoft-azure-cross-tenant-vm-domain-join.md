@@ -34,7 +34,7 @@ This quirk only applies to the Virtual Machine roles, and isnt a privilege escal
 ![](../images/vm-domain-join/architecture.drawio.png)
 
 # Microsoft Entra ID (Azure Active Directory)
-Microsoft Azure Directory Domains often get confused with the on-premises equivelants, which is probably what fuelled the [name change to Microsoft Entra ID](m ) in 2023. They really share very little similarities, there isnt group policy in an ~~AzureAD~~ Entra ID Domain, nor are there domain controllers to manage or server-roles to control.
+Microsoft Azure Directory Domains often get confused with the on-premises equivalents, which is probably what fuelled the [name change to Microsoft Entra ID](m ) in 2023. They really share very little similarities, there isnt group policy in an ~~AzureAD~~ Entra ID Domain, nor are there domain controllers to manage or server-roles to control.
 
 Although saying that, you can deploy ~~Azure Active Directory~~ Microsoft Entra Domain Services, which does provide the on-premise domain functionality to the cloud tenant. Or you can integrate your on-premise machines directly to Microsoft Entra ID, or use Azure Arch to manage on-premise machines but in Azure, or implement split tenancy, hash-only syncs etc... Basically, unsuprisingly, Microsoft Azure integrates nicely with the traditional Microsoft ecosystem and you can pretty much do whatever you want.
 
@@ -53,7 +53,7 @@ To join a VM to a domain, you can install the Azure AD based Windows Login exten
 Go to your Virtual Machine, select Extensions from the sidebar, and search for the extension:
 ![](../images/vm-domain-join/azure-ad-based-windows-login.png)
 
-Here is a snippet to John Savil's explanation to using the [Azure AD VM Join extension](https://youtu.be/9xpf3jZBzhQ?si=KlNWqMlWa96yWrc1&t=643).
+Here is a snippet of John Savil's explanation of using the [Azure AD VM Join extension](https://youtu.be/9xpf3jZBzhQ?si=KlNWqMlWa96yWrc1&t=643).
 
 The extension will enable a managed identity on your Virtual Machine, and will join itself to your tenant. 
 
@@ -67,7 +67,7 @@ As an adminstrator, you can run `dsregcmd /status` and confirm that your machine
 ![](../images/vm-domain-join/dsregcmd-status.png)
 
 # Connecting to the Machine via RDP
-Connecting to a machine via RDP to an AzureAdJoined domain is a pain in the ass. It does not just work out the box.
+Connecting to a machine via RDP to an AzureAdJoined domain is a pain in the ass. It does not just work out of the box.
 
 There are at least two ways of doing it, which require either increasing your security exposure, or a not-insignificant amount of configuration.
 
@@ -123,11 +123,11 @@ AzureAD\legit@ashleykingscotehotmailco.onmicrosoft.com
 ```
 
 # Azure Domain Join Internals
-As mentioned, you *could* easily decompile the `C:\Packages\Plugins\Microsoft.Azure.ActiveDirectory.AADLoginForWindows\1.3.0.0\AADLoginForWindowsHandler.exe` application to understand how it works. However, even just runing the executable, the console outputs that it is updating the registry. I used a registry snapshot tool to take a before and after, and see which keys the utility is writing too.
+As mentioned, you *could* easily decompile the `C:\Packages\Plugins\Microsoft.Azure.ActiveDirectory.AADLoginForWindows\1.3.0.0\AADLoginForWindowsHandler.exe` application to understand how it works. However, even just running the executable, the console outputs that it is updating the registry. I used a registry snapshot tool to take a before and after, and see which keys the utility is writing to.
 
 ![](../images/vm-domain-join/adding-registry-settings.png)
 
-Notice that not only does it mention Adding Regsitry Settings, but there is also mention of using `dsregcmd`.
+Notice that not only does it mention Adding Registry Settings, but there is also mention of using `dsregcmd`.
 
 By taking a snapshot of the registry keys before and after running the install manually, I could see that the application updates the following registry keys:
 
@@ -172,14 +172,14 @@ My caddyfile configuration looks like this:
 }
 ```
 
-The Azure metdata service isnt meant to be proxied externally, so I had to strip out some of the headers.
+The Azure metadata service isnt meant to be proxied externally, so I had to strip out some of the headers.
 
 You can then run caddy like this:
 ```
 caddy.exe run --config cadddyfile.txt --adapter caddyfile
 ```
 
-This means that externally, anyone can acces my metadata service.
+This means that externally, anyone can access my metadata service.
 ![](../images/vm-domain-join/curl-header.png)
 
 
@@ -188,7 +188,7 @@ In the victim domain, I get a completely fresh VM, which is **not** domain joine
 
 That managed identity does not have any permissions assigned to it.
 
-> NOTE: In order to update the registry settings, you need local admin rights. Initial access is glossed over here, as that could happen a number of ways. The windows machine could be running IIS with an RCE, or there could be leaked local credentials. You dont even need direct network access to the machine, you could just use the Azure serial port, or Azure run comand. The fact that you need to update the registry keys, means that everything here isnt a security vulnerability. Its not a privilege escalation, as you already need local admin rights. However, it does highlight some interesting design decisions and provides some insight into the AzureAD domain join internals.
+> NOTE: In order to update the registry settings, you need local admin rights. Initial access is glossed over here, as that could happen a number of ways. The windows machine could be running IIS with an RCE, or there could be leaked local credentials. You dont even need direct network access to the machine, you could just use the Azure serial port, or Azure run command. The fact that you need to update the registry keys, means that everything here isnt a security vulnerability. Its not a privilege escalation, as you already need local admin rights. However, it does highlight some interesting design decisions and provides some insight into the AzureAD domain join internals.
 
 Run the following powershell script, to set the registry keys to point to the proxied metadata instance at `172.187.208.144`.
 ```
@@ -244,7 +244,7 @@ I can then successfully log into the machine, as my `hacker` user.
 
 So the Virtual Machine Administrator Login role is evaluated based off the values set in those registry settings, and NOT hardcoded to the tenant that the VM actualy sits in.
 
-### Repsonsible Disclosure:
+### Responsible Disclosure:
 The above was submitted to Microsoft Security Research Center on the 15th October 2024.
 
 Submission number: `VULN-136902`
@@ -254,4 +254,4 @@ Case number: `92022`
 - 21st October 2024 - Status changed to `Review/Repro`
 - 27th October 2024 - I chased for an update
 - 27th October 2024 - Microsoft Closed the issue
-- 2nd Novemeber 2024 - I asked if I can publicly share the information. I never received a reply.
+- 2nd November 2024 - I asked if I can publicly share the information. I never received a reply.
