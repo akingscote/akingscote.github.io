@@ -7,6 +7,6 @@ order: 4
 
 
 
-[Ashley Kingscote](www.linkedin.com/in/ashley-kingscote-87581094) is **Cloud Security Engineer** currently working for [ImmersiveLabs](https://www.immersivelabs.com/)
+[Ashley Kingscote](https://www.linkedin.com/in/ashley-kingscote-87581094) is **Cloud Security Engineer** currently working for [ImmersiveLabs](https://www.immersivelabs.com/)
 
 Email: `ashleykingscote@hotmail.co.uk`
