@@ -57,7 +57,7 @@ There are four AWS-managed options available:
 |---------|-----------|-----------|
 | aws-auth (2018) (deprecated)                  | ❌| ✔ |
 | IRSA (2019)                         | ✔ | ✔ |
-| EKS Pod Identities (2023)           | ✔ | ❌ |
+| EKS Pod Identities (2023)           | ✔ | ✔ |
 | EKS Cluster Access Management (2023) | ❌ | ✔|
 
 AWS Perms, refers to the ability for the cluster to interact with resources in AWS. K8s perms, means the ability to act as a kind of provisioner - the ability to manage k8s resources (e.g. create pods).
@@ -158,9 +158,10 @@ This is **so** much simpler to manage than IRSA, and allows for least privilege 
 
 EKS Pod Identity will not create the mapped service account in your cluster, you'll have to create that yourself. 
 
+You can then give any K8s permissions you want, to that service account.
 
 ## EKS Access Management (2023)
-Also at the tail end of 2023, [AWS released EKS Access Management](https://aws.amazon.com/about-aws/whats-new/2023/12/amazon-eks-controls-iam-cluster-access-management/) to reduce the cumbersome multi-step process of using both Amazon EKS and Kubernetes APIs to configure access and permissions. 
+Also at the tail end of 2023, (three weeks after the Pod Identity announcement) [AWS released EKS Access Management](https://aws.amazon.com/about-aws/whats-new/2023/12/amazon-eks-controls-iam-cluster-access-management/) to reduce the cumbersome multi-step process of using both Amazon EKS and Kubernetes APIs to configure access and permissions. 
 
 This new feature has two significant benefits:
 
@@ -187,8 +188,4 @@ It undermines the "less things to manage" aspect of EKS Access Management, but d
 So what about my precious scenario? EKS Access Management would help simplify giving my IAM principals permissions to create pods, especially in a multi-cluster scenario 🔥 BUT those permissions are not least privilege, and this feature does not give my pods permissions over AWS itself.
 
 # Conclusion
-The modern answer to building my scenario is:
-- Use EKS Pod Identities for AWS permissions
-- Use EKS Access Management to give the platform cluster permissions to create pods in the workload cluster
-
-If i want least privilege in my cluster, i'll have to create and manage my own RoleBindings, add them to an K8s API group and then create an AWS Access Entry which is in that same group. Personally, I think the benefit of minimal administration outweighs the risks. I think `AmazonEKSAdminPolicy` (`admin`) is a suitable compromise.
+With the above in mind, I think the best solution for my scenario is to use EKS Pod Identities. Using just a single technology solution, I can use least privileged access for K8s permissions, by creating RoleBindings for the service account, but with minimal administration for mapping the AWS permissions.
