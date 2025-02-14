@@ -104,7 +104,7 @@ So now you have one message, showing the same information, but its really easy t
 Essentially, traditional logging data on it's own isn't good enough. It needs to be super-charged into an event, packed with as much information as possible, in particular, a unique identifier used to track a particular *request* or *action* across your many services, which leads nicely onto the third information type: Traces.
 
 ## Traces
-Traces are the new kid, that complement logs and metrics to unlock the power of observability. They allow us to *trace* events (like user requests) end-to-end, across all our services.
+Traces complement logs and metrics to unlock the power of observability. They allow us to *trace* events (like user requests) end-to-end, across all our services.
 
 When you hear the word traces, tell yourself **distributed traces**. AFAIK, it's not an official terminology, but I think it helps with grasping the concept. Observability engineering, and particularly ~~traces~~ distributed traces, are for end-to-end *tracing* across multiple different services within distributed systems.
 
@@ -138,7 +138,7 @@ Microsoft will be able to plug that TraceId into their observability tooling and
 To clarify:
 - Metrics - much the same as always
 - Logs - much the same, but supercharged!
-- Traces - new, detailed information, able to track a request across **distributed** systems
+- Traces - detailed information, able to track a request across **distributed** systems
 
 ## Instrumentation
 I'll keep this section brief, but essentially there are some automatic instrumentation capabilities, that bind into your existing network requests and add some more information.
