@@ -22,7 +22,7 @@ What I'm going to try and do here, is condense **some** the information from the
 
 I think in a follow-up post, I'll explore more *security* related aspects of Observability.
 
-# Observability in a nutshell 🥜
+## Observability in a nutshell 🥜
 
 Observability is the ability to interrogate any behaviour in <ins>**your applications**</ins> without shipping any new code to debug something that's happened. I want to stress **your** and **applications**. It (typically) has to be applications that you fully control.
 
@@ -48,7 +48,7 @@ From what I've seen, the only **single tool** out there is premium software, whi
 
 Popular and open-source alternatives include [prometheus](https://github.com/prometheus/prometheus) for metrics, [Grafana Loki](https://grafana.com/products/cloud/logs/) or [ELK stack](https://www.elastic.co/elastic-stack) for your logs and [Jaeger](https://www.jaegertracing.io/) for traces.
 
-### Metrics
+## Metrics
 Metrics are nothing new ([SNMP came out in the 80s](https://datatracker.ietf.org/doc/html/rfc1067)), are extremely common, and are typically represented as timeseries data. For example, at 13:24:31, the server's memory capacity was at 94%.
 ![Windows CPU graph](../images/observability/cpu.png)
 This information can be useful to determine performance issues, but is often pretty useless on its own. It needs to be correlated with other data to identify root causes.
@@ -140,7 +140,7 @@ To clarify:
 - Logs - much the same, but supercharged!
 - Traces - new, detailed information, able to track a request across **distributed** systems
 
-# Instrumentation
+## Instrumentation
 I'll keep this section brief, but essentially there are some automatic instrumentation capabilities, that bind into your existing network requests and add some more information.
 ```
 import "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -191,7 +191,7 @@ In the above example (taken from [Thomas Stringer's otel-shopping-cart example](
 
 Lots of the observability (specifically OpenTelemetry) examples are in Golang, because many microservices (for distributed systems) are written in Golang.
 
-# The Result
+## The Result
 Really, the only new thing here is instrumenting your code with as much context as possible, and the idea of distributed traces.
 
 You may have concluded that the ambitions of these concepts likely result in a *lot* of data being stored. You'd be right, its difficult to store, index, and query these large and rich datasets efficiently.
