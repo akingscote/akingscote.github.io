@@ -107,7 +107,7 @@ For SIEMs, its all about getting quality data in; and getting quality informatio
 The situation is untenable. Just look at how many languages there are, to do effectively the same thing!
 - [Kusto Query Language (KQL)](https://learn.microsoft.com/en-us/kusto/query/?view=microsoft-fabric) (Microsoft)
 - [Kibana Query Language (KQL)](https://www.elastic.co/guide/en/kibana/current/kuery-query.html) (Kibana)
-- [Elasticsearch Query Langauge ES|QL](https://www.elastic.co/blog/getting-started-elasticsearch-query-language) (Elastic)
+- [Elasticsearch Query Langauge ESQL](https://www.elastic.co/blog/getting-started-elasticsearch-query-language) (Elastic)
 - [YARA-L](https://cloud.google.com/chronicle/docs/detection/yara-l-2-0-overview) (Google SecOps)
 - [Search Processing Language (SPL)](https://docs.splunk.com/Splexicon:SPL) and [Common Information Model (CIM)](https://docs.splunk.com/Documentation/CIM/6.0.2/User/Overview) (Splunk)
 - [Event Query Language (EPL)](https://www.elastic.co/guide/en/elasticsearch/reference/current/eql.html) (Elastic)
