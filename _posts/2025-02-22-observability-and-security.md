@@ -1,5 +1,5 @@
 ---
-title: "Observability Part 2 - Security and the SOC"
+title: "Observability (2/2) - Security and the SOC"
 date: "2025-02-23"
 categories: 
   - "engineering"
@@ -187,6 +187,22 @@ Say eBPF *detects* a system call to open `/tmp/test` (Time of Check (TOC)), it's
 I'd highly encourage everyone to watch the video from the linked timestamp, as Mark Manning does a much better job of explaining it than I do.
 
 My point here is that these fancy runtime security tools, that help improve your "observability" can be limited. They are often eBPF based which is a fantastic tool, but even then do not guarantee complete security insight.
+
+# Open Cybersecurity Schema Framework (OCSF)
+One exciting initiative gaining traction is the Open Cybersecurity Schema Framework (OCSF), which aims to address some of my points raised above.
+
+The [OCSF](https://schema.ocsf.io/) is an open-source effort by top cyberscecurity companies to define a standard schema for common security events. [OCSF is agnostic to storage format, data collection and ETL processes](https://github.com/ocsf/ocsf-docs/blob/main/Understanding%20OCSF.pdf).
+
+This [quote from Amazon](https://aws.amazon.com/blogs/opensource/from-data-chaos-to-cohesion-how-ocsf-is-optimizing-cyber-threat-detection/) sums up some of my frustrations, and validates the need for OCSF.
+> OCSF addresses a core challenge in threat detection and security analytics: the absence of consistent formats and data models for logs and alerts across different vendors. This diversity complicates cybersecurity operations, requiring manual efforts to normalize data and integrate insights from disparate sources. Without the OCSF, security teams need to invest considerable time and effort in aggregating and harmonizing information from disparate sources. As a result, organizations struggle to efficiently analyze and respond to security threats, hindering their ability to protect against evolving cyber risks.
+
+Contributors include [AWS, Splunk, Cisco, Cloudflare, Crowdstrike, Palo Alto, Rapid7, Trend Micro, and Zscaler](https://www.splunk.com/en_us/newsroom/press-releases/2022/cybersecurity-and-technology-industry-leaders-launch-open-source-project-to-help-organizations-detect-and-stop-cyberattacks-faster-and-more-effectively.html). In November 2024, [OCSF was added to Linux Foundation](https://www.linuxfoundation.org/press/open-cybersecurity-schema-framework-ocsf-joins-the-linux-foundation-to-optimize-critical-security-data).
+
+Since its release in September 2023, OCSF and its community has grown rapidly. In just a couple of years, the iniative has grown [from 17 companies, to over 200 participating organizations](https://aws.amazon.com/blogs/opensource/from-data-chaos-to-cohesion-how-ocsf-is-optimizing-cyber-threat-detection/).
+
+[Datadog observability pipelines supports](https://www.datadoghq.com/blog/observability-pipelines-stream-logs-in-ocsf-format/) incoming data in OCSF format, with streaming to security vendors such as Splunk, Datadog Cloud SIEM, AWS Security Lake, Microsoft Sentinel, Google SecOps, and Crowdstrike.
+
+Notable abscenses for direct OCSF support include Microsoft and Elastic; presumably to maintain their vendor lock in and market positions.
 
 ## Summary
 I hope that I've explained some concepts and overlaps and that you've learned something from these late night ramblings.
