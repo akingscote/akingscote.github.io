@@ -1,5 +1,5 @@
 ---
-title: "Observability Part 1 - Observability in a nutshell"
+title: "Observability (1/2) - Observability in a nutshell"
 date: "2025-02-14"
 categories: 
   - "engineering"
