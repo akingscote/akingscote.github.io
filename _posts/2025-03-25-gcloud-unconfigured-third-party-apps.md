@@ -1,7 +1,9 @@
-# ---
+---
 title: "Google Cloud - Managing Google's Unverified Authentication Library"
 date: "2025-03-25"
 categories: 
+  - "cloud"
+  - "security"
   - "gcp"
 tags: 
   - "gcp"
