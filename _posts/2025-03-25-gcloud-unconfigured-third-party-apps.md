@@ -29,7 +29,7 @@ To manage user accounts, you will use the Google Admin console ([https://admin.g
 By default, your API security settings will be configured as **Allow users to access any third-party apps**.
 ![alt text](../images/gcloud-third-party-apps/api-control-default.png)
 
-Perhaps for compliance reasons, or just best security practice, you may want to lock down access to third-party apps.
+Perhaps for compliance reasons, or just best security practice (such as the [security checklist](https://support.google.com/a/answer/7587183?hl=en#zippy=%2Capps-google-workspace-only)), you may want to lock down access to third-party apps.
 
 The problem is, the **official** application behind ADC (created by Google), is unverified and is a third party app.
 
