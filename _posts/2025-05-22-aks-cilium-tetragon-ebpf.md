@@ -21,14 +21,14 @@ tags:
 # Unlocking Next-Gen Kubernetes Security with eBPF tooling and Microsoft Sentinel
 This post explores the setup and configuration of [Cilium](https://cilium.io/) and [Tetragon](https://tetragon.io/) in Azure Kubernetes Service and integrating & monitoring with Microsoft Sentinel.
 
-Essentially, it does what [this blog from Isovalent](https://isovalent.com/blog/post/microsoft-and-isovalent-bring-ebpf-based-networking-to-azure) talks about, but with some cool security features 🔒, and not behind a premium service 💲💸💰.
+Essentially, it does what [this blog from Isovalent](https://isovalent.com/blog/post/microsoft-and-isovalent-bring-ebpf-based-networking-to-azure) talks about, but with some cool security features, and not behind a premium service.
 
 > For some reason, that blog includes a screenshot from Elastic, rather than Microsoft Sentinel 🙃
 {: .prompt-info }
 
 By combining Cilium (eBPF networking), Tetragon (runtime security), and Microsoft Sentinel (SIEM), you get deep visibility into Kubernetes traffic, real-time security enforcement, and SOC-ready alerting—all without paying for premium enterprise licenses.
 
-This demonstation (and [supporting IaC](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/tree/main)) provides is something like this: Cilium installed in an AKS cluster, with kube-proxy replaced with Cilium's eBPF-based alternative and envoy installed for Layer 7 inspection. Hubble is available to enable deep insight into the networking within your cluster. Tetragon is installed, with example policies for monitoring "sensitive" files in a production workload ([AKS Pet Store demo app](https://github.com/Azure-Samples/aks-store-demo)). Logs are streamed to Microsoft Sentinel, with an accompanying analytics rule, which creates an incident when the container has been "breached".
+This demonstation (and [supporting IaC](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/tree/main)) goes like this: Cilium is installed in an AKS cluster, with kube-proxy replaced with Cilium's eBPF-based alternative and envoy installed for Layer 7 inspection. Hubble is available to enable deep insight into the networking within your cluster. Tetragon is installed, with example policies for monitoring "sensitive" files in a "production" workload ([AKS Pet Store demo app](https://github.com/Azure-Samples/aks-store-demo)). Logs are streamed to Microsoft Sentinel in real-time, with an accompanying analytics rule, which creates an incident when the container has been "breached".
 
 A video demonstration is available [here](https://www.youtube.com/watch?v=23YzfkZqeEY), and all the terraform code is available [on my github](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/tree/main). Unfortunately, deployment takes about 30 minutes (you'll see why if you read on 👀). I've intentionally written verbose terraform, so you can easily pick parts out for your own deployments and can deploy easily without a bunch of bespoke tooling.
 
@@ -41,12 +41,12 @@ If you want to learn a bit about how to set this up, then read on. Otherwise i'd
 ## Sexy Security Stuff
 The headlines are this:
 
-1. Cilium is outrageously good
+1. [Cilium](https://cilium.io/) is outrageously good
   - I can [replace kube-proxy](https://Cilium.io/use-cases/kube-proxy/) (iptables-based) with a sexy eBPF-based alternative, significantly improving performance
   - L7 inspection with envoy - meaning I can check HTTP traffic within my cluster using eBPF 🔥
-  - It's got native wireguard/ipsec termination
+  - It's even got native [wireguard/ipsec termination](https://docs.cilium.io/en/latest/security/network/encryption/) 👀
   - Complete observability out the box; easy integration with managed services such as promethues (metrics) and grafana
-2. Tetragon - I feel like this deserves more hype. With negligible performance overhead and simple management, I can:
+2. [Tetragon](https://tetragon.io/) - I feel like this deserves more hype. With negligible performance overhead and simple management, I can:
   - Block specific syscalls
   - Block network calls
   - Monitor for sensitive file read/writes
@@ -57,7 +57,7 @@ It blows my mind, that with open-source technology and a laptop, I can build a c
 ## Introduction
 There are an awful lot of components to this deployment; too many to go into each in detail. But I do feel the need to gently introduce CNI.
 
-Feel free to deploy the code and have a play yourself! I'm fully aware that its not a good way of deploying infrastructure, or even writing terraform. It's intentionally easy to read and reverse engineer, so you wont have to go through the pain of figuring this stuff out.
+Feel free to deploy the [code](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel) and have a play yourself! I'm fully aware that its not a good way of deploying infrastructure, or even writing terraform. It's intentionally easy to read and reverse engineer, so you wont have to go through the pain of figuring this stuff out.
 
 ## Container Network Interface (CNI)
 A CNI (Container Network Interface) is a plugin-based framework that lets you configure networking for your clusters containers. It defines how your pods get IPs, talk to each other, and connect to outside networks. The CNI handles all the low-level stuff like assigning IPs, setting up routing, and enforcing network policies.
@@ -147,7 +147,7 @@ Then you can use the following JSON and update the cluster: `az aks update -g my
 }
 ```
 
-> Don't worry, all of this (except feature registration) is baked into my ~~hacky~~ delightful terraform
+> Don't worry, all of this (except feature registration) is baked into my ~~hacky~~ [delightful terraform](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/blob/main/main.tf#L124)
 {: .prompt-info }
 
 Once `kube-proxy` is disabled, we can finally install Cilium via helm, with the `kubeProxyReplacement` flag set to `true`.
@@ -163,7 +163,7 @@ ingressController.default
 envoyConfig.enabled
 loadBalancer.l7.backend="envoy"
 ```
-That'll include [L7 traffic management](https://docs.Cilium.io/en/stable/network/servicemesh/l7-traffic-management/) and [ingress](https://docs.Cilium.io/en/stable/network/servicemesh/ingress/).
+That'll include [L7 traffic management](https://docs.Cilium.io/en/stable/network/servicemesh/l7-traffic-management/) and [ingress](https://docs.Cilium.io/en/stable/network/servicemesh/ingress/). This works completely in the provided code, but I dont show it off in the video.
 
 > By default, Hubble will redact sensitive information in Layer 7 traffic. You can set the `hubble.redact.enabled` flag in the Cilium helm chart to disable this functionality.
 {: .prompt-info }
@@ -195,9 +195,9 @@ When I first started using Tetragon it honestly blew my mind. I wonder if we wil
 
 Tetragon exposes its insights via JSON logs and a gRPC endpoint. For this demo, we will use container insights to wrap the JSON logs and ingest them into Microsoft Sentinel.
 
-You can optionally [install the Tetragon CLI](https://Tetragon.io/docs/installation/tetra-cli/). Once you've applied your [Tetragon policies](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/blob/main/demo/tetragon-file-monitoring.yaml), the logs will be captured.
-To test your policies, you can grab all the logs from the `export-stdout` container from the `Tetragon` pods, and pipe them into the `tetra` CLI.
+You can optionally [install the Tetragon CLI](https://Tetragon.io/docs/installation/tetra-cli/) to help debug and test your policies. Once you've applied your [Tetragon policies](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/blob/main/demo/tetragon-file-monitoring.yaml), the logs will be captured, so this is optional.
 
+To test your policies, you can grab all the logs from the `export-stdout` container from the `Tetragon` pods, and pipe them into the `tetra` CLI.
 ```
 kubectl logs -n kube-system -l app.kubernetes.io/name=Tetragon -c export-stdout -f | tetra getevents -o compact --pod store-admin
 ```
