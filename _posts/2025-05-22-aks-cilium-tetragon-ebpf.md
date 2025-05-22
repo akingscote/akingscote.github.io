@@ -1,5 +1,5 @@
 ---
-title: "Azure Kubernetes Service (AKS) – eBPF-based Networking & security + integration with Microsoft Sentinel
+title: "Azure Kubernetes Service (AKS) – eBPF-based networking & security + integration with Microsoft Sentinel"
 date: "2025-05-22"
 categories: 
   - "cloud"
