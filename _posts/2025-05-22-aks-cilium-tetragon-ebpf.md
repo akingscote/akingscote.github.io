@@ -112,15 +112,15 @@ If you couple that with some of the limitations set out in the [Azure documentat
 - Available only for Linux and not for Windows.
 - Cilium L7 policy enforcement is disabled
 
-I really question why anyone would bother with the free version. It is fiddely to set this up manually, but this blog and acompanying code will walk through it.
+I really question why anyone would bother with Azure CNI Powered by Cilium. It is fiddely to set this up manually, but this blog and acompanying code will walk through it, and provide pretty much all of that "premium" functionality.
 
 ## Deployment
 So we need to deploy an AKS cluster in Bring your Own CNI mode, and install Cilium ourselves via helm - that should be ezpz.
 But there are a few gotchas to make you aware of.
 
-By default your Cilium (+ hubble) installation wont install on any system nodes, as it's not a critical resource. You'll also need to make sure you have more than one node, or [Cilium will show one of the operators in a pending state](https://github.com/rancher/rke2/issues/933). In this demo code, I've opted for two system nodes (deployment to the `kube-system` namespace), and two user nodes **and** I've forced the installation on the system node (check out the flags on the helm install terraform).
+For AKS at least, by default your Cilium (+ hubble) installation wont install on any system nodes, as it's not a critical resource. You'll also need to make sure you have more than one node, or [Cilium will show one of the operators in a pending state](https://github.com/rancher/rke2/issues/933). In this demo code, I've opted for two system nodes amd two user nodes **and** I've forced the installation of Cilium and Tetragon onto the system nodes ([check out the flags on the helm install terraform](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/blob/main/cillium.tf#L119)).
 
-By default, AKS will deploy the `kube-proxy` `Daemonset`, and you [can't deploy AKS without it](https://github.com/Azure/AKS/issues/4563). It's a **separate operation to disable and then replace the kube-proxy**. Additionally, replacing the kube-proxy isn't possible until you register the `KubeProxyConfigurationPreview` feature on the subscription.
+Also, by default, AKS will deploy the `kube-proxy` `Daemonset`, and you [can't deploy AKS without it](https://github.com/Azure/AKS/issues/4563). It's a **separate operation to disable and then replace the kube-proxy**. Additionally, replacing the kube-proxy isn't possible until you register the `KubeProxyConfigurationPreview` feature on the subscription.
 
 [To do that](https://medium.com/@amitmavgupta/installing-Cilium-in-azure-kubernetes-service-byocni-with-no-kube-proxy-825b9007b24b) you need to firstly enable `aks-preview` **extension** in your subscription:
 ```
