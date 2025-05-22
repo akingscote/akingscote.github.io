@@ -616,11 +616,9 @@ The intention of this work was to:
 This integration of Cilium, Tetragon, and Microsoft Sentinel demonstrates how modern eBPF-powered tooling can transform Kubernetes security—without relying on expensive enterprise licenses. Replacing "legacy" systems like kube-proxy with Cilium’s eBPF dataplane, enforcing runtime security with Tetragon, and feeding real-time detections into Microsoft Sentinel, creates a high-performance observability and threat detection stack that’s both powerful and practical.
 
 ## Key Takeaways
-- ✅ Cilium's eBPF magic – Faster networking, L7 visibility, and policy enforcement, all while bypassing iptables bottlenecks.
-- ✅ Tetragon’s runtime superpowers – From detecting sensitive file access to killing malicious processes, it’s a game-changer for container security.
-- ✅ Microsoft Sentinel as the brains – Correlate Tetragon alerts with other logs, automate responses, and turn kernel-level signals into SOC-ready incidents.
-
-This setup proves that open-source eBPF tools + cloud-native SIEMs = enterprise-grade security on a budget. The hardest part? The initial setup—but now, with this guide and code, you can skip the pain and go straight to the payoff.
+- ✅ Cilium's eBPF magic – Faster networking (+ bypassing iptables bottlenecks), L7 visibility, and policy enforcement.
+- ✅ Tetragon’s runtime superpowers – Detecting sensitive file access to killing malicious processes
+- ✅ Microsoft Sentinel as the brains – Correlate Tetragon alerts with other logs, automate responses, and turn kernel-level signals into SOC incidents.
 
 Next up, I might take a look at detecting real-world attacks (like container escapes or crypto miners) with Tetragon + Microsoft Sentinel, or explore the world of [eBPF for Windows](https://github.com/microsoft/ebpf-for-windows) 👀
 
