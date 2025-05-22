@@ -18,8 +18,8 @@ tags:
   - "observability"
 ---
 
-# Azure Kubernetes Service (AKS) – eBPF-based Networking & security + integration with Microsoft Sentinel
-This post explores the setup and configuration of Cilium and Tetragon in Azure Kubernetes Service and integrating & monitoring with Microsoft Sentinel.
+# Unlocking Next-Gen Kubernetes Security with eBPF tooling and Microsoft Sentinel
+This post explores the setup and configuration of [Cilium](https://cilium.io/) and [Tetragon](https://tetragon.io/) in Azure Kubernetes Service and integrating & monitoring with Microsoft Sentinel.
 
 Essentially, it does what [this blog from Isovalent](https://isovalent.com/blog/post/microsoft-and-isovalent-bring-ebpf-based-networking-to-azure) talks about, but with some cool security features 🔒, and not behind a premium service 💲💸💰.
 
@@ -28,9 +28,9 @@ Essentially, it does what [this blog from Isovalent](https://isovalent.com/blog/
 
 By combining Cilium (eBPF networking), Tetragon (runtime security), and Microsoft Sentinel (SIEM), you get deep visibility into Kubernetes traffic, real-time security enforcement, and SOC-ready alerting—all without paying for premium enterprise licenses.
 
-The end result is something like this: Cilium installed in an AKS cluster, with kube-proxy replaced with Cilium's eBPF-based alternative and envoy installed for Layer 7 inspection. Hubble is available to enable deep insight into the networking within your cluster. Tetragon is installed, with example policies for monitoring "sensitive" files in a production workload ([AKS Pet Store demo app](https://github.com/Azure-Samples/aks-store-demo)). Logs are streamed to Microsoft Sentinel, with an accompanying analytics rule, which creates an incident when the container has been "breached".
+This demonstation (and [supporting IaC](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/tree/main)) provides is something like this: Cilium installed in an AKS cluster, with kube-proxy replaced with Cilium's eBPF-based alternative and envoy installed for Layer 7 inspection. Hubble is available to enable deep insight into the networking within your cluster. Tetragon is installed, with example policies for monitoring "sensitive" files in a production workload ([AKS Pet Store demo app](https://github.com/Azure-Samples/aks-store-demo)). Logs are streamed to Microsoft Sentinel, with an accompanying analytics rule, which creates an incident when the container has been "breached".
 
-A video demonstration is available [here](https://www.youtube.com/watch?v=23YzfkZqeEY), and all the terraform code is available [on my github](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/tree/main). Deployment takes about 30 minutes unfortunately, as discussed in detail within the blog. I've intentionally written verbose terraform, so you can easily pick parts out for your own deployments.
+A video demonstration is available [here](https://www.youtube.com/watch?v=23YzfkZqeEY), and all the terraform code is available [on my github](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/tree/main). Unfortunately, deployment takes about 30 minutes (you'll see why if you read on 👀). I've intentionally written verbose terraform, so you can easily pick parts out for your own deployments and can deploy easily without a bunch of bespoke tooling.
 
 I'm not going to talk about eBPF in detail; I'll likely cover that in a complementary talk or blog in the future. It's also not meant to be a deep dive into Cilium or Tetragon, or Microsoft Sentinel; but rather a light touch on all of them together.
 
@@ -38,7 +38,7 @@ The point of this exercise, is to highlight some of these exciting technologies,
 
 If you want to learn a bit about how to set this up, then read on. Otherwise i'd recommend checking out the [video demonstration](https://www.youtube.com/watch?v=23YzfkZqeEY) to see this bad boy in action.
 
-# Sexy Security Stuff
+## Sexy Security Stuff
 The headlines are this:
 
 1. Cilium is outrageously good
@@ -52,7 +52,12 @@ The headlines are this:
   - Monitor for sensitive file read/writes
 3. I can integrate all this with Microsoft Sentinel and build a SOC on steroids. We all know SIEMs need data - with this blog I'll give you more data than you ever need.
 
-It blows my mind, that with open-source technology and a laptop, I can build a cluster on steroids with decent observability, and configure a SIEM with super rich and useful information/context.
+It blows my mind, that with open-source technology and a laptop, I can build a cluster on steroids with decent observability, and configure a SIEM with super rich and useful information/context. The Azure resources are also pretty cheap (at a small scale).
+
+## Introduction
+There are an awful lot of components to this deployment; too many to go into each in detail. But I do feel the need to gently introduce CNI.
+
+Feel free to deploy the code and have a play yourself! I'm fully aware that its not a good way of deploying infrastructure, or even writing terraform. It's intentionally easy to read and reverse engineer, so you wont have to go through the pain of figuring this stuff out.
 
 ## Container Network Interface (CNI)
 A CNI (Container Network Interface) is a plugin-based framework that lets you configure networking for your clusters containers. It defines how your pods get IPs, talk to each other, and connect to outside networks. The CNI handles all the low-level stuff like assigning IPs, setting up routing, and enforcing network policies.
@@ -109,7 +114,7 @@ If you couple that with some of the limitations set out in the [Azure documentat
 
 I really question why anyone would bother with the free version. It is fiddely to set this up manually, but this blog and acompanying code will walk through it.
 
-# Deployment Architecture
+## Deployment
 So we need to deploy an AKS cluster in Bring your Own CNI mode, and install Cilium ourselves via helm - that should be ezpz.
 But there are a few gotchas to make you aware of.
 
@@ -166,7 +171,7 @@ That'll include [L7 traffic management](https://docs.Cilium.io/en/stable/network
 By default, Cilium operates in an "allow-all" mode, meaning all traffic is permitted and nothing is logged. Once a policy is applied, that mode changes and you can configure Cilium to start capturing traffic logs.
 
 ## Cilium Cli
-You can [install the Cilium CLI](https://docs.Cilium.io/en/stable/gettingstarted/k8s-install-default/#install-the-Cilium-cli) to help debug and manage the Cilium deployment.
+You can optionally [install the Cilium CLI](https://docs.Cilium.io/en/stable/gettingstarted/k8s-install-default/#install-the-Cilium-cli) to help debug and manage the Cilium deployment.
 
 Ensure you've updated your kubeconfig with your AKS cluster:
 ```
@@ -190,7 +195,7 @@ When I first started using Tetragon it honestly blew my mind. I wonder if we wil
 
 Tetragon exposes its insights via JSON logs and a gRPC endpoint. For this demo, we will use container insights to wrap the JSON logs and ingest them into Microsoft Sentinel.
 
-You can [install the Tetragon CLI](https://Tetragon.io/docs/installation/tetra-cli/). Once you've applied your [Tetragon policies](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/blob/main/demo/tetragon-file-monitoring.yaml), the logs will be captured.
+You can optionally [install the Tetragon CLI](https://Tetragon.io/docs/installation/tetra-cli/). Once you've applied your [Tetragon policies](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/blob/main/demo/tetragon-file-monitoring.yaml), the logs will be captured.
 To test your policies, you can grab all the logs from the `export-stdout` container from the `Tetragon` pods, and pipe them into the `tetra` CLI.
 
 ```
@@ -199,8 +204,8 @@ kubectl logs -n kube-system -l app.kubernetes.io/name=Tetragon -c export-stdout 
 
 As shown in the [video demonstration](https://youtu.be/23YzfkZqeEY?si=SUksWuVpsiIldENt&t=601), the logs are processed instantly and you can clearly see the behaviour of your policy.
 
-# AKS Monitoring
-## Container Insights
+## AKS Monitoring
+### Container Insights
 Azure Container Insights is a monitoring solution that gives you visibility into the performance and health of your Kubernetes clusters and containers. It collects metrics, logs, and events and is integrated with Azure Monitor.
 
 There are [two methods for getting your logs](https://docs.azure.cn/en-us/azure-monitor/containers/container-insights-data-collection-configure?tabs=portal) : creating a Data Collection Rule in Azure or via a `ConfigMap` within the cluster.
@@ -223,7 +228,7 @@ Regardless, I've deployed both in the example code, you can you play around with
 
 [Container Insights will deploy the Azure Monitor agent](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-overview#agent) in your cluster.
 
-## Azure Monitor for Containers
+### Azure Monitor for Containers
 The wizard Thomas Stringer (who i seem to reference in nearly all my blogs ♥) has a great (but old) [post on logging for AKS](https://trstringer.com/native-azure-logging-aks/).
 
 Previously, you'd install the [Operations Management Suite](https://github.com/microsoft/OMS-Agent-for-Linux) in the cluster, which would create a DaemonSet (omsagent) and a Deployment (omsagent-rs) and send the output to your workspace.
@@ -255,7 +260,7 @@ ContainerLogV2
 ```
 It's a super specific search and not that practical and alerts on any call where `/etc/shadow` is passed as an argument. I've set the rule up to run every five minutes. Again, this whole piece is just showing off the tech -- i'm just you'll have your own ideas about what you could use it for.
 
-# Demonstration
+## Demonstration
 Check out the video [here](https://www.youtube.com/watch?v=23YzfkZqeEY) and the reference IaC [here](https://github.com/akingscote/aks-cilium-tetragon-msft-sentinel/tree/main).
 
 For this demonstration, I've opted to deploy the [AKS petstore demo](https://github.com/Azure-Samples/aks-store-demo).
@@ -602,7 +607,7 @@ I also demonstrate a Tetragon policy with `Sigkill` in place, killing the proces
 
 The (grainy) screenshot above shows that the `cat /etc/shadow` was instantly killed. By itself thats pretty cool, but coupled with the fact its eBPF based, easy to manage, and integrated into Microsoft Sentinel makes the whole concept shine.
 
-# Conclusion: Unlocking Next-Gen Kubernetes Security with eBPF and Microsoft Sentinel
+## Conclusion: Unlocking Next-Gen Kubernetes Security with eBPF and Microsoft Sentinel
 The intention of this work was to:
 1. Figure out how to integrate all this tech
 2. Highlight the potential for this tech stack
