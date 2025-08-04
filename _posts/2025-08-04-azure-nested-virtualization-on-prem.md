@@ -14,17 +14,16 @@ tags:
   - "security"
 ---
 
-# Microsoft Azure Nested Virtualization: Creating on-premise Windows Domain environments
 ## Summary
 Modern Microsoft Azure hypervisors support nested virtualization; meaning you can run virtual machines within virtual machines. With a bit of magic, you can create an effective "Virtual ESXi" server and run a few virtual machines from ISO files, which is much closer to an on-premise environment.
 
-However, instead of ISOs, if I have a few existing Virtual Hard Disks (VHDs) that are configured to be domain-joined windows VMs, I can attach them as additional disks to a Virtual Machine running Hyper-V. Hyper-V is then configured with a few VMs, using an attached disk as their image source.
+However, instead of ISOs, if I have a few existing Virtual Hard Disks (VHDs) that are configured to be domain-joined windows VMs, I can attach them as additional disks to a virtual machine running Hyper-V. I can then configure Hyper-V with a few VMs, using an attached disk as their image source. With this approach, I can avoid any runtime configuration.
 
 ![](../images/nested-vms/nested-vms-architecture.png)
 
 The end result is that I can have an effective "Virtual ESXi" server, running an on-premise Windows domain environment; all virtualized and deployed in a few minutes. Check out this video demonstration [here](https://youtu.be/D6Jf8D_AHtg).
 
-Supporting IaC, including packer image definitions, can be found [here](https://github.com/akingscote/msft-azure-nested-virtualization-windows-domain).
+Supporting IaC, including packer image definitions, can be found [here](https://github.com/akingscote/msft-azure-nested-virtualization-windows-domain) <------.
 
 # Introduction
 Nested virtualization [isn't a new capability for Microsoft (~2017)](https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/), and as far as I'm aware, [AWS](https://repost.aws/questions/QUXqOvN3_dR-Gsv5CJC6rBpQ/what-aws-instances-can-support-nested-virtualisation) dosen't really support it, but [Google Cloud does](https://cloud.google.com/compute/docs/instances/nested-virtualization/overview).
@@ -33,17 +32,17 @@ I've got a fair bit of experience building on-premise Windows domains (mainly Pu
 
 However, with this approach, once my domain is configured, I can effectively "snapshot" the entire domain and replay it using this nested-virtualization technique, rather than configuring anything at run time. This speeds up deployments and lends itself really nicely for lab environments.
 
-> FWIW, Beginning with Windows 10 build 1809 and Windows Server 2019, OpenSSH is available as a [feature on demand](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh-overview). For Windows Server 2025, it's [installed but not enabled](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=powershell&pivots=windows-server-2025).
+> FWIW, beginning with Windows 10 build 1809 and Windows Server 2019, OpenSSH is available as a [feature on demand](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh-overview). For Windows Server 2025, it's [installed but not enabled](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=powershell&pivots=windows-server-2025).
 {: .prompt-info }
 
-**Why not just run directly in Azure?**
+**Why not just run directly in Azure?**<br>
 Of course, you can just deploy a Windows server machine directly into Azure as a virtual machine, BUT this technique allows you to simulate much closer to an on-premise environment.
 
 I guess the main advantage is that you have an entirely sandboxed network (depending on your configuration). Your IP addressing scheme can be exactly as it is on-premise. You don't need to worry about the Azure networking fabric getting in the way, such as the first few IP addresses being reserved in each subnet, or ARP issues, or NSG rules, or flow logs....
 
 Also, although the Windows kernels are [supposedly pretty much identical between on-premise and the cloud](https://learn.microsoft.com/en-us/windows-server/get-started/azure-edition#key-differences), the Virtual machines are subtly different. For example, many of the available OS images are running the [Azure Windows VM Agent](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/agent-windows), meaning you can run VM extensions and get provisioning updates.
 
-> A note on **Nested Virtualization Networking**</br>With Azure nested-virtualization, you can configure reverse NAT on the host, which provides direct access to ports from VMs within Hyper-V.<br>For example, if you have a Windows Server running within Hyper-V, which is running IIS web server, you can expose that port externally. For my scenario I haven't done that, as I want a completely isolated network within the Hyper-V VM. If you want to learn more about that, check out [this blog](https://techcommunity.microsoft.com/blog/itopstalkblog/how-to-setup-nested-virtualization-for-azure-vmvhd/1115338).
+> A note on **networking with nested virtualization**<br>With Azure nested-virtualization, you can configure reverse NAT on the host, which provides direct access to ports from VMs within Hyper-V.<br>For example, if you have a Windows Server running within Hyper-V, which is running IIS web server, you can expose that port externally. For my scenario I haven't done that, as I want a completely isolated network within the Hyper-V VM. If you want to learn more about that, check out [this blog](https://techcommunity.microsoft.com/blog/itopstalkblog/how-to-setup-nested-virtualization-for-azure-vmvhd/1115338).
 {: .prompt-info }
 
 
@@ -60,7 +59,7 @@ Fortunately, it seems that the newest generations of SKUs (E-series) support hyp
 Once you've selected a virtual machine SKU that supports nested virtualization, nested virtualization will not [automatically be running on VM launch](https://learn.microsoft.com/en-us/troubleshoot/azure/virtual-machines/windows/troubleshoot-vm-by-use-nested-virtualization).
 
 It's a pretty easy fix, just run the following from an administrative powershell prompt:
-```
+```powershell
 bcdedit /set hypervisorlaunchtype auto
 ```
 and then restart the PC.
@@ -68,12 +67,12 @@ and then restart the PC.
 > There are some more sophisticated [official startup scripts](https://github.com/MicrosoftDocs/Virtualization-Documentation/blob/main/hyperv-tools/Nested/Enable-NestedVm.ps1), but they haven't been updated in 10 years 👀
 
 You'll then need to install the Hyper-V feature, which you can do via the GUI, or via powershell with:
-```
+```powershell
 Install-WindowsFeature -Name DHCP,Hyper-V -IncludeManagementTools
 ```
 
 On the VM, it's also worth setting Hyper-V enhanced session mode, which allows you copy-paste into VMs, and resize VM windows.
-```
+```powershell
 Set-VMHost -EnableEnhancedSessionMode $True
 ```
 
@@ -82,11 +81,11 @@ You now have a machine capable of nested virtualization. I've put all this code,
 > **A note on 6th generation images**<br>[6th generation Microsoft Azure images are backed by NVMe](https://learn.microsoft.com/en-us/azure/virtual-machines/nvme-overview#scsi-to-nvme), as opposed to SCSI, which makes them very fast. Unfortunately, [I found a bug with Packer](https://github.com/hashicorp/packer-plugin-azure/issues/521), which wouldn't let me deploy an image built for 6th generation images (I'm not the only one who's [had issues](https://discuss.hashicorp.com/t/creating-azure-arm-image-for-latest-v6-generation-of-x86-vms/73778).
 {: .prompt-warning }
 
-> **A note on VM disks**<br>If creating a new virtual machine in Hyper-V, it will create a `.vhdx` disk storage format. This is essentially a dynamic disk size, as opposed to `.vhd`, which is a static size. Obviously `.vhdx` is better, as it *may* use less space. However, in order to create Microsoft Azure data disks from Storage Account Objects, the virtual disk object must be in `.vhd` format, and not `.vhdx`. Fortunately, you can easily convert the disk in Powershell, it just takes a while and uses up a lot of space:`Convert-VHD -Path "C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\WindowsServerMember.vhdx" -DestinationPath "D:\WindowsServerMember.vhd" -VHDType Fixed`
+> **A note on VM disks**<br>If creating a new virtual machine in Hyper-V, it will create a `.vhdx` disk storage format. This is essentially a dynamic disk size, as opposed to `.vhd`, which is a static size. Obviously `.vhdx` is better, as it *may* use less space. However, in order to create Microsoft Azure data disks from Storage Account Objects, the virtual disk object must be in `.vhd` format, and not `.vhdx`. Fortunately, you can easily convert the disk in Powershell, it just takes a while and uses up a lot of space:<br>`Convert-VHD -Path "C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\WindowsServerMember.vhdx" -DestinationPath "D:\WindowsServerMember.vhd" -VHDType Fixed`
 {: .prompt-info }
 
 Once a VHD disk has been attached to the VM, in order to use it in Hyper-V, the disk needs to be in an "offline" state from the OS's perspective. You can easily do this in powershell via the following:
-```
+```powershell
 Set-Disk -Number 2 -IsOffline $true
 ```
 The first disk (starting at 0) is normally the OS, and then the second disk a temporary RAM disk.
@@ -105,7 +104,7 @@ Otherwise, you may find the following error:
 {: .prompt-info }
 
 Of course, all this can be automated in Powershell:
-```
+```powershell
 Set-Disk -Number 2 -IsOffline $true
 New-VM -Name "WindowsServerDC" -MemoryStartupBytes 4GB -Generation 2 -NoVHD -SwitchName "Internal"
 Add-VMHardDiskDrive -VMName "WindowsServerDC" -DiskNumber 2 -ControllerType SCSI -ControllerNumber 0 -ControllerLocation 1
@@ -122,11 +121,11 @@ As we are just starting a `.vhd` file, all the VM's configuration is already set
 With Hyper-V, the network interfaces within the VM are effectively ephemeral, and are controlled by Hyper-V. This means that when a VM is booted from disk, it dosent have any IP address configuration. That means that any domain is then unreachable, unless there is some startup scripts configured within the OS to reset the IP address on boot. Windows on-premise domains usually use statically assigned IP addresses, which means we will need to reconfigure these IP addresses on first boot.
 
 Additionally, depending on your requirements, you'll likely need to create a Hyper-V networking switch, and associate your VMs with that "network".
-```
+```powershell
 New-VMSwitch -Name "Internal" -SwitchType Internal
 ```
 For my PoC, I've saved the following script (or variants of it) on the Windows VMs:
-```
+```powershell
 Start-Transcript -Path "C:\Logs\Set-StaticIP-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
 try {
@@ -223,7 +222,7 @@ Convert-VHD -Path "C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\WindowsSe
 ```
 
 Once that operation is completed, you'll need to upload to your storage account. As you are copying such large files (~64GB), it's best to use `Az-Copy`.
-```
+```powershell
 $vhdPath = "C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\UbuntuServer\UbuntuServer.vhdx"
 $destinationUrl = "https://vhdstoragea3905e7a.blob.core.windows.net/vhds?sv=2020-02-10&ss=b&srt=co&sp=rwac&se=2025-07-28T09:50:34Z&st=2025-07-27T09:50:34Z&spr=https&sig=DbBKo%2BAC2OjCS6AmlBvbOozKn9JXbJrJW8Me1B7ISOs%3D"
 
