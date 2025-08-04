@@ -1,6 +1,6 @@
 ---
 title: "Microsoft Azure Nested Virtualization: Creating on-premise Windows Domain environments"
-date: "2025-08-23"
+date: "2025-08-04"
 categories: 
   - "cloud"
   - "security"
