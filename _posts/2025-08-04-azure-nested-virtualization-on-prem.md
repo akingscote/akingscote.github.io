@@ -217,7 +217,7 @@ You'll need to create a VM switch within Hyper-V, so that the VMs can talk to ea
 ![](../images/nested-vms/vm-switch-internal)
 
 Once your VMs are ready, you'll need to shut them down, and as explained earlier, you'll unfortunately need to convert the disks from `vhdx` files to fixed-size `vhd` files. This takes a little time and requires a fair amount of disk space. You can do this with the following powershell script:
-```
+```powershell
 Convert-VHD -Path "C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\WindowsServerMember.vhdx" -DestinationPath "D:\WindowsServerMember.vhd" -VHDType Fixed
 ```
 
