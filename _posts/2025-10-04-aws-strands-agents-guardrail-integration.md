@@ -1,4 +1,4 @@
---
+---
 title: "Three different LLM Guardrails, and integration with Strands Agents (AWS)"
 date: "2025-10-04"
 categories: 
@@ -153,7 +153,7 @@ There are a couple more [sneaky hooks](https://github.com/strands-agents/sdk-pyt
 Unfortunately, these hooks dont quite function as I intended, so I've had to settle for the inefficient `MessageAddedEvent`.
 
 > In the two months I was waiting for the PR to be approved, the strands SDK has moved on considerably, and the experimental hooks are now part of the main hooks. The new hook list is now:<br>- `AfterInvocationEvent` : This event is fired after the agent has completed processing a request, regardless of whether it completed successfully or encountered an error.<br>- `AfterModelCallEvent` : This event is fired after the agent has finished calling the model, regardless of whether the invocation was successful or resulted in an error.<br>- `AfterToolCallEvent` : This event is fired after the agent has finished executing a tool, regardless of whether the execution was successful or resulted in an error. <br>- `AgentInitializedEvent` : This event is fired after the agent has been fully constructed and all built-in components have been initialized.<br>- `BeforeInvocationEvent` : This event is fired before the agent begins processing a new user request, before any model inference or tool execution occurs.<br>- `BeforeModelCallEvent` : This event is fired just before the agent calls the model for inference, allowing hook providers to inspect or modify the messages and configuration that will be sent to the model.<br>- `BeforeToolCallEvent` : This event is fired just before the agent executes a tool, allowing hook providers to inspect, modify, or replace the tool that will be executed
-{: .prompt-warn }
+{: .prompt-warning }
 
 To [use Strands Agent hooks](https://strandsagents.com/latest/documentation/docs/api-reference/hooks/), you simply extend the `HookProvider` class, and register any processing methods in a `register_hooks` method. For example:
 ```python
@@ -448,7 +448,7 @@ guardrails configure
 ![](../images/strands-agents-guardrails/guardrailsai-configure.png)
 
 > If you have an issue with the guardrails package, remove the version constraints from the packages in the `requirements.txt`, and try again from a fresh `venv`. There may be a conflict with some versions of the strands agents.
-{: .prompt-warn }
+{: .prompt-warning }
 
 
 Install the toxic language guardrail from the Guardrails AI hub:
@@ -459,7 +459,7 @@ guardrails hub install hub://guardrails/toxic_language
 Then just run the `main.py` app.
 
 > Don't forget to add your own credentials to the agent code.
-{: .prompt-warn }
+{: .prompt-warning }
 
 The code here is a little weird, as i'm trying to test offensive language. You dont actually need to send an offensive word, sending even with asterisks also gets blocked:
 ```
@@ -591,7 +591,7 @@ You may see a message about the `TOGETHER_API_KEY`, which is for prompt guard an
 I recommend setting the `TOKENIZERS_PARALLELISM=true` env var, which prevents potential tokenizer deadlocks in multi-threaded environments.
 
 > If like me, your PC (and GPU) is ancient, you'll likely need to download an older version of PyTorch, which you can do with:<br>`uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu`.<br>Then set the visible devices to none with `export CUDA_VISIBLE_DEVICES=""`
-{: .prompt-warn }
+{: .prompt-warning }
 
 In this example, we are asking the LLM to generate some potentially malicious output, which we want blocked by LlamaFirewall code shield scanner:
 
