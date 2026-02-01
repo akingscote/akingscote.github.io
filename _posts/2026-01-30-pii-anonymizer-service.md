@@ -19,8 +19,6 @@ tags:
   - "security"
   - "anonymization"
 ---
-
-# PII Anonymization Service
 I had an idea for a PII anonymization service, with the intention of maintaining integrity with the data it's anonymized.
 
 The original context was for anonymizing Microsoft Sentinel database dumps, so that I can re-use the data for threat hunting training, without exposing real-users PII.
