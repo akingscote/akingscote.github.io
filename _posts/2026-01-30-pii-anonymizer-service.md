@@ -31,7 +31,7 @@ Threat hunting in Microsoft Sentinel spans multiple columns and tables, and i'd 
 
 I briefly explored if I could integrate Microsoft Sentinel with this service as a pre-processor, so that the data in anonymized before it even reaches Microsoft Sentinel, but I found that its not feasible unless you use custom tables, which I didnt want to do.
 
-So in the end, this blog is just showing off a vibe-coded PII anonymization service.
+So in the end, this blog is just showing off a vibe-coded PII anonymization service. The code can be found [here](https://github.com/akingscote/pii-anonymizer-service), and a video demonstration can be found [here](https://youtu.be/j9Kcnnft2YA).
 
 > This was my own original idea (AFAIK), but the execution has been heavily slopey-shouldered onto Claude 🤖 using [Github speckit](https://github.com/github/spec-kit). After all, its 2026 - who writes proof of concepts by hand nowadays? I knew the architecture I wanted, I knew which technology I wanted to use, but I didn't want to integrate it all together from scratch.
 {: .prompt-warning }
