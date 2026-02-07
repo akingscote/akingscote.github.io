@@ -185,4 +185,6 @@ In this [Nov 2025 video](https://www.youtube.com/watch?v=8-boBsWcr5A) Satya Nade
 
 As I've written about already, observability engineering and security monitoring are converging. Observability for AI agents is going to be huge.
 
+Agent identity and orchestration is the obvious next steps, but who knows what shape.
+
 This a bit of an abrupt sign off, but as long as we are vigilent and observant of all the indicators all around us, I think we can navigate this space. In the future, I'm going to try and focus future posts on the concepts and ideas, rather than technical execution.
