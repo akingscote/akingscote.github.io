@@ -108,7 +108,7 @@ Dario also references *"legendary programmers are increasingly [describing thems
 In one of my many discussions around these topics, my friend make an interesting comparison - the one-legged stool.
 ![](../images/wheres-the-moat/one-legged-stool.png)
 
-In the 1860s, Nitroglycerin manufacturing for making explosives used a one-legged stool, as the operator has to constantly keep an eye on the thermometer of the vat to avoid an explosion. That's an example of one of many jobs that was replaced by the advancement of technology, which seems almost medieval now in hindsight. Maybe the future will be the same way, and this is all natural for human progress.
+In the 1860s, Nitroglycerin manufacturing for making explosives used a one-legged stool, as the operator has to constantly keep an eye on the thermometer of the vat to avoid an explosion. The one-legged stool meant that the operator had to lean to keep themselves upright and stay alert. At one point in time, it was someone's job to sit on a stool all day. That's an example of one of many jobs that was replaced by the advancement of technology, which seems almost medieval now in hindsight. Maybe the future will see software development the same way, and this is all natural for human progress. 
 
 # So where is the moat?
 So what is the skillset and ability that AI (or at least LLMs for now) will not be able to replace?
@@ -149,6 +149,8 @@ Using AI day to day is a given, that's the minimum. I don't mean copy and pastin
 
 This "futuristic" view of an individual orchestrating dozens of autonomous AI agents isn't some far off fantasy. That technology won't pop out of nowhere and exist overnight. It already exists and is being actively refined and adopted. You need to pivot to that mode of working **now**. You need to be the architect. You need the ideas. The execution of those ideas will be handled by your agents. When I say "will be". I mean like next week. You need to learn how to do that now. It's **probably the single most important upskilling you can do.**.
 
+I feel like the age of the leet coder is dead. The focus is now on secure and scalable system design, and not so much discrete pieces of software. Many of the efficient software patterns already exist, are tried and tested, and LLMs will be able to handle that without breaking a sweat. Integrating those components into the wider ecosystem will always be challenging, and an area ripe for focus.
+
 The technology won't just appear, it'll trickle through the scene gradually as it's doing right now. You need to be at the end of these innovations. It's not like 2023, 2024 or even 2025. This year, you need to be switched on and on it. You can't delay anymore. You can't join this band in 2028 as a reaction; you **must** be proactive. That means upskilling now, finding the right people to follow, and gaining practical experience in this area, that you can demonstrate.
 
 **You aren't building these "skills" for today, you're building them for tomorrow.**
@@ -183,7 +185,7 @@ Software is now so easy to build, and is essentially disposable. Is there any po
 
 In this [Nov 2025 video](https://www.youtube.com/watch?v=8-boBsWcr5A) Satya Nadella casually mentions that more Github repos are being created than ever before. Obviously thats because software development is more accessible than ever, but it's going to be the majority of useless vibe-coded apps.
 
-As I've written about already, observability engineering and security monitoring are converging. Observability for AI agents is going to be huge.
+As I've written about already, observability engineering and security monitoring are converging. Traditional logs don't cut it. We need high-cardinality, high-dimensonality security data. Observability for AI agents is going to be huge. We are going to need all the millions of pieces of telemetry we already use for APIs/services, and then the additional noise of thousands of autonomous AI agents. We've already had one wave of "big-data". Soon we are going to need a big-big-data.
 
 [Agent identity](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/the-future-of-ai-agents%E2%80%94and-why-oauth-must-evolve/3827391) and agent orchestration are the obvious next steps, but who knows what shape. Kubernetes changed the game for container orchestration, it'll be interesting to see if what emerges for AI orchestration.
 
