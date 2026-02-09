@@ -61,7 +61,7 @@ Now I fully understand the limitations of LLMs and pretrained transformers, I kn
 
 Everyone agrees that LLMs won't get us to AGI, but they may enable us to build the tools which *will* get us there (e.g. [DeepSeek is now writing kernels to improve DeepSeek performance](https://github.com/ggml-org/llama.cpp/pull/11453)). Just the other day Anthropic successfully [built a C compiler in rust with Claude](https://www.anthropic.com/engineering/building-c-compiler). Although not perfect, that's the capability today. What on earth is it going to be able to do in five years time?
 
-> ...and thats assuming that the billions of dollars being invested in non-LLM AI technologies don't' yield significan't breakthroughs.
+> ...and thats assuming that the billions of dollars being invested in non-LLM AI technologies don't yield significant breakthroughs.
 {: .prompt-info }
 
 [Nicolas Carlini](https://en.wikipedia.org/wiki/Nicholas_Carlini) has some great metaphors on his [thoughts on the future of AI (March 2025)](https://nicholas.carlini.com/writing/2025/thoughts-on-future-ai.html), and how LLMs have their limits.
@@ -83,7 +83,7 @@ I've never known any different to upskilling, learning, and growing. But the spe
 But that's the job now. It's keep up or fall behind, there really isn't much inbetween. As a security professional, it's not about writing complex reverse shell commands. It's about constantly learning, evolving and keeping up with technologies.
 
 Where I want to be intentional (like writing this blog, or writing a technical whitepaper or report), I don't always want to take a shortcut. Sometimes I need careful and calculated thought.
-> I'd like a tool to help digest the pace of change and this evolving landscape. Something that reads the newsletters, twitter feeds, linkedin posts, RSS feeds, github issues, hacker news, mainstream news, and injects the information i'm interested in direct into my brain in real time. I get BBC news alerts about the prince of England going to court, but I'd rather get an alert about a new LLM model thats going to improve my quality of life.<br>Give me 30 mins and I'll just vibe code it and have a working PoC 🙃
+> I'd like a tool to help digest the pace of change and this evolving landscape. Something that reads the newsletters, twitter feeds, linkedin posts, RSS feeds, github issues, hacker news, mainstream news, and injects the information i'm interested in direct into my brain in real time. I get BBC news alerts about the prince of England going to court, but I'd rather get an alert about a new LLM model thats going to improve my quality of life.<br><br>Give me 30 mins and I'll just vibe code it and have a working PoC 🙃
 {: .prompt-info }
 
 # More fuel to the fire
