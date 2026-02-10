@@ -11,6 +11,10 @@ tags:
   - "architecture"
   - "design"
   - "ai-limitations"
+  - "azure"
+  - "aws"
+  - "email"
+  - "moat"
 ---
 > Don't worry! This isn't actually a 75 minute read! It includes a bunch of LLM output.
 {: .prompt-warning }
