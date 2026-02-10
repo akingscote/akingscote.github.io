@@ -441,6 +441,7 @@ This gives you: inbound-only email, one “inbox”, public unauthenticated acce
 
 <details>
 <summary>Click here to see the full GPT 5.2 Codex response</summary>
+
 ## Recommended architecture (AWS): “Serverless catch‑all inbox” with SES + S3 + CloudFront + tiny viewer app
 
 This is the lowest-dependency, lowest-ops way to receive inbound email and expose it over HTTPS with unauthenticated public access, while keeping cost near-zero when idle.
@@ -613,6 +614,7 @@ We will use a purely event-driven architecture.
 
 <details>
 <summary>Click here to see the full Gemini 3 Pro response</summary>
+
 Based on your constraints—specifically the need for a **one-click deploy**, **unauthenticated public access**, and **minimal running costs** on AWS or Azure—I have designed a Serverless Solution using **AWS**.
 
 This approach minimizes dependencies (no servers to manage) and costs (you only pay for the split-second the code runs and the tiny storage used).
@@ -909,7 +911,6 @@ When you are done, simply **Delete the Stack** in CloudFormation.
 ## Deepseek (Deep Thinking)
 Deepseek's Deep Thinking mode also took a while to come up with a response (260 seconds), and it's solution was also: AWS-based using Lambda and SES 🙃.
 
-
 **AWS Services Used:**
 1. Amazon SES - For receiving inbound emails
 2. AWS Lambda - For processing and storing emails
@@ -919,6 +920,7 @@ Deepseek's Deep Thinking mode also took a while to come up with a response (260 
 
 <details>
 <summary>Click here to see the full Deepseek (Deep Thinking) thinking breakdown</summary>
+
 We are going to design a solution for a temporary email service that is public facing, with minimal dependencies, one-click deploy, unauthenticated public access, single user, inbox accessible via HTTPS, minimal cost, and only running for a few hours at a time.
 
 Given the requirements, we can consider using serverless components to avoid running costs when not in use and to minimize infrastructure management.
@@ -2309,6 +2311,7 @@ My solution, is essentially just a public VM with this cloud-init startup script
 
 <details>
 <summary>Click here to reveal the startup script</summary>
+
 ```
 #!/bin/bash
 exec > /var/log/email-setup.log 2>&1
