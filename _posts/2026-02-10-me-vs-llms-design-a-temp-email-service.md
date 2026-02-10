@@ -15,8 +15,9 @@ tags:
 > Don't worry! This isn't actually a 75 minute read! It includes a bunch of LLM output.
 {: .prompt-warning }
 
-The other week, I posted the article [Where's the moat?](https://akingscote.co.uk/posts/wheres-the-moat/). The intention was to capture my feelings around the use of LLMs in the industry at the moment. Since that post, I feel very vindicated. Many [others](https://siddhantkhare.com/writing/ai-fatigue-is-real) are sharing similar sentiments, and HackerRank shared something eerily similar to my own observations (*["the age of the leet coder is dead."](https://akingscote.co.uk/posts/wheres-the-moat/#:~:text=I%20feel%20like%20the%20age%20of%20the%20leet%20coder%20is%20dead%2E*).<br>
-![](../images/temp-email-service/hackerrank-tweet.png)<br>
+The other week, I posted the article [Where's the moat?](https://akingscote.co.uk/posts/wheres-the-moat/). The intention was to capture my feelings around the use of LLMs in the industry at the moment. Since that post, I feel very vindicated. Many [others](https://siddhantkhare.com/writing/ai-fatigue-is-real) are sharing similar sentiments, and HackerRank shared something eerily similar to my own observations (*"the age of the leet coder is dead."*)<br>
+[![Video Thumbnail](../images/temp-email-service/hackerrank-tweet.png)](https://x.com/i/status/2020809406741696775)<br>
+
 It's interesting that its the last couple of weeks in particular, that have made the community panic a little bit.
 
 With that in mind, I wanted to test a hypothesis I had, regarding the limits of LLMs and their lack of creative problem solving. I want to prove that the moat is still very much present. Now this experiment cannot be taken with any kind of credibility. I have an idea and I have a concept of what is "right". I just want to see if the LLM can reach the conclusion that I have in mind. I've not employed the scientific method with any kind of professionalism. This is just for funsies.
