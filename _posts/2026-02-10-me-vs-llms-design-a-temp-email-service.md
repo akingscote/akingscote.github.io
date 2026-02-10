@@ -421,7 +421,7 @@ It went straight into creating custom code in Python for the email service, rath
 > This gives you a **4-resource, single-file, zero-dependency** temporary email service deployable in under 2 minutes.
 
 </details>
-
+<br>
 I would say that that isnt using "minimal dependencies", and is quite a convoluted and complicated solution. Minimal points for anthropic here.
 
 ## OpenAI - GPT 5.2 Codex (Github Copilot)
@@ -1731,6 +1731,7 @@ Deepseek's Deep Thinking mode also took a while to come up with a response (260 
 > 
 > This solution is not fully automated, but it is a starting point for a proof of concept.
 </details>
+<br>
 
 <details markdown="1">
 <summary><b>Click here to see the full Deepseek (Deep Thinking) response</b></summary>
@@ -2284,7 +2285,7 @@ Deepseek's Deep Thinking mode also took a while to come up with a response (260 
 > 
 > This solution provides a fully functional temporary email service that can be deployed in minutes and costs virtually nothing when not in use.
 </details>
-
+<br>
 # Conclusion
 This very unscientific test has confirmed my feelings; that orginal thought and creativity is still king for now. Although this probably isn't a completely fair assessment, it's clear that LLMs really over-engineer solutions. There seems to be a real push for re-inventing the wheel, when perfectly good systems already exist out there. None of the models came up with my idea of using the DNS of the public-facing VM for the solution. I expected to see more DuckDNS or `ngrok`. Nearly all the solutions were involving numerous cloud services. 
 
@@ -2508,5 +2509,7 @@ echo "Welcome to your Azure email server!" | mail -s "Welcome" azureuser@$MAIL_D
 echo "Email setup complete at $(date)"
 ```
 </details>
+<br>
 
 A full video demonstration (2 mins) can be found [here](https://youtu.be/Y6ZcJgIBiV8).
+[![Video Thumbnail](https://img.youtube.com/vi/Y6ZcJgIBiV8/hqdefault.jpg)](https://www.youtube.com/watch?v=Y6ZcJgIBiV8)
