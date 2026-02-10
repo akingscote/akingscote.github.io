@@ -12,6 +12,9 @@ tags:
   - "design"
   - "ai-limitations"
 ---
+> Don't worry! This isn't actually a 75 minute read! It includes a bunch of LLM output.
+{: .prompt-warning }
+
 The other week, I posted the article [Where's the moat?](https://akingscote.co.uk/posts/wheres-the-moat/). The intention was to capture my feelings around the use of LLMs in the industry at the moment. Since that post, I feel very vindicated. Many [others](https://siddhantkhare.com/writing/ai-fatigue-is-real) are sharing similar sentiments, and HackerRank shared something eerily similar to my own observations (*["the age of the leet coder is dead."](https://akingscote.co.uk/posts/wheres-the-moat/#:~:text=I%20feel%20like%20the%20age%20of%20the%20leet%20coder%20is%20dead%2E*).<br>
 ![](../images/temp-email-service/hackerrank-tweet.png)<br>
 It's interesting that its the last couple of weeks in particular, that have made the community panic a little bit.
