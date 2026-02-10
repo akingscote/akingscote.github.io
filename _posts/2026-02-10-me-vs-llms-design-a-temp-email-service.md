@@ -91,7 +91,7 @@ It went straight into creating custom code in Python for the email service, rath
 > Tin hat moment - I wonder if takes this approach to encourage more usage. Surely generating your own email service uses more tokens than using an off the shelf solution 👀
 {: .prompt-info }
 
-<details>
+<details markdown="1">
 <summary>Click here to see the full Claude Opus 4.6 response</summary>
 
 # Temporary Email Service — Solution Design
@@ -439,7 +439,7 @@ GPT 5.2 Codex equally went with AWS, but this time went for the SES service.
 5. Optional: auto-expire everything after a few hours using S3 lifecycle expiration + DynamoDB TTL.
 This gives you: inbound-only email, one “inbox”, public unauthenticated access, minimal moving parts, and one-click deploy via IaC.
 
-<details>
+<details markdown="1">
 <summary>Click here to see the full GPT 5.2 Codex response</summary>
 
 ## Recommended architecture (AWS): “Serverless catch‑all inbox” with SES + S3 + CloudFront + tiny viewer app
@@ -612,7 +612,7 @@ We will use a purely event-driven architecture.
 - Store: SES writes the raw email file immediately to an AWS S3 Bucket.
 - Access: An AWS Lambda function (behind an API Gateway) acts as the web server. When you visit the URL, it reads the S3 bucket and renders the inbox/emails as HTML.
 
-<details>
+<details markdown="1">
 <summary>Click here to see the full Gemini 3 Pro response</summary>
 
 Based on your constraints—specifically the need for a **one-click deploy**, **unauthenticated public access**, and **minimal running costs** on AWS or Azure—I have designed a Serverless Solution using **AWS**.
@@ -918,7 +918,7 @@ Deepseek's Deep Thinking mode also took a while to come up with a response (260 
 4. Amazon S3 - For hosting the web interface
 5. API Gateway - For serving emails via HTTP(S)
 
-<details>
+<details markdown="1">
 <summary>Click here to see the full Deepseek (Deep Thinking) thinking breakdown</summary>
 
 We are going to design a solution for a temporary email service that is public facing, with minimal dependencies, one-click deploy, unauthenticated public access, single user, inbox accessible via HTTPS, minimal cost, and only running for a few hours at a time.
@@ -1732,7 +1732,7 @@ We have provided the CloudFormation template and Lambda function code. The user 
 This solution is not fully automated, but it is a starting point for a proof of concept.
 </details>
 
-<details>
+<details markdown="1">
 <summary>Click here to see the full Deepseek (Deep Thinking) response</summary>
 
 I'll design a serverless solution using AWS that meets all your requirements with minimal dependencies and costs. Here's the architecture:
@@ -2309,7 +2309,7 @@ With a smidge more prompting for some housekeeping, the solution really didnt ta
 
 My solution, is essentially just a public VM with this cloud-init startup script.
 
-<details>
+<details markdown="1">
 <summary>Click here to reveal the startup script</summary>
 
 ```
