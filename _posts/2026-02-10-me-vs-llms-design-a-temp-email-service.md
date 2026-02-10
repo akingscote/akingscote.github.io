@@ -92,333 +92,333 @@ It went straight into creating custom code in Python for the email service, rath
 {: .prompt-info }
 
 <details markdown="1">
-<summary>Click here to see the full Claude Opus 4.6 response</summary>
+<summary><b>Click here to see the full Claude Opus 4.6 response</b></summary>
 
-# Temporary Email Service — Solution Design
-
-## Overview
-
-A minimal, one-click deployable temporary email service on **AWS** that provides a single inbound-only email inbox accessible via a public HTTPS endpoint. The design prioritizes simplicity, low cost, and minimal dependencies.
-
----
-
-## Architecture
-
-```
-┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│  Internet    │      │  AWS SES     │      │  S3 Bucket   │      │  Lambda +    │
-│  (sender)    │─────▶│  (inbound)   │─────▶│  (email      │◀─────│  Function URL│
-│              │      │              │      │   storage)   │      │  (inbox UI)  │
-└──────────────┘      └──────────────┘      └──────────────┘      └──────────────┘
-                                                                        ▲
-                                                                        │ HTTPS
-                                                                        │
-                                                                  ┌─────┴──────┐
-                                                                  │  Browser   │
-                                                                  │  (user)    │
-                                                                  └────────────┘
-```
-
----
-
-## Components (4 total)
-
-| Component | Purpose | Why |
-|---|---|---|
-| **AWS SES (Inbound)** | Receives emails on your domain | Free-tier inbound receiving; no server to run |
-| **S3 Bucket** | Stores raw email files | Pennies of storage; no database needed |
-| **Lambda + Function URL** | Serves the inbox UI over HTTPS | No API Gateway needed; Function URLs are free; no always-on server |
-| **CloudFormation / SAM template** | One-click deploy | Single `sam deploy` or CloudFormation stack creation |
-
-### Why AWS over Azure?
-
-- **AWS SES inbound email receiving** is a unique, low-cost managed service with no equivalent simplicity on Azure (Azure would require an MX relay VM or third-party service).
-- Lambda Function URLs provide free, unauthenticated HTTPS endpoints — no API Gateway cost.
-- All four components fit comfortably in the AWS free tier for this use case.
-
----
-
-## How It Works
-
-### 1. Email Reception
-- You configure a **domain** (or subdomain) with an MX record pointing to SES (e.g., `inbound-smtp.us-east-1.amazonaws.com`).
-- SES has a **Receipt Rule** that matches a single recipient address (e.g., `inbox@tempmail.yourdomain.com`).
-- The Receipt Rule action is **"Save to S3"** — SES writes the raw `.eml` to an S3 bucket with a unique key.
-
-### 2. Inbox Access
-- A **Lambda function** (Python, ~100 lines) exposed via a **Function URL** (auth type `NONE`) serves a simple HTML page.
-- On request, it lists objects in the S3 bucket, parses the raw MIME emails (Python's built-in `email` module), and renders a lightweight inbox view.
-- Clicking an email shows the full body/headers.
-
-### 3. Cleanup
-- The S3 bucket has a **lifecycle rule** (e.g., 1-day expiration) to auto-delete old emails.
-- Or, the Lambda can expose a `/clear` endpoint to purge the inbox.
-
----
-
-## Deployment (One-Click)
-
-Everything is defined in a single **AWS SAM template**:
-
-```yaml name=template.yaml
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Description: Temporary single-user inbound email service
-
-Parameters:
-  EmailAddress:
-    Type: String
-    Description: "The full recipient email address (e.g. inbox@mail.example.com)"
-  SESRuleSetName:
-    Type: String
-    Default: "temp-email-rule-set"
-    Description: "Name for the SES Receipt Rule Set"
-
-Resources:
-  # ---- S3 Bucket for email storage ----
-  EmailBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      LifecycleConfiguration:
-        Rules:
-          - Id: AutoExpireEmails
-            Status: Enabled
-            ExpirationInDays: 1
-
-  EmailBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref EmailBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowSESPut
-            Effect: Allow
-            Principal:
-              Service: ses.amazonaws.com
-            Action: s3:PutObject
-            Resource: !Sub "${EmailBucket.Arn}/*"
-            Condition:
-              StringEquals:
-                "AWS:SourceAccount": !Ref "AWS::AccountId"
-
-  # ---- SES Receipt Rule Set & Rule ----
-  SESRuleSet:
-    Type: AWS::SES::ReceiptRuleSet
-    Properties:
-      RuleSetName: !Ref SESRuleSetName
-
-  SESReceiptRule:
-    Type: AWS::SES::ReceiptRule
-    DependsOn: EmailBucketPolicy
-    Properties:
-      RuleSetName: !Ref SESRuleSet
-      Rule:
-        Name: save-to-s3
-        Enabled: true
-        ScanEnabled: true
-        Recipients:
-          - !Ref EmailAddress
-        Actions:
-          - S3Action:
-              BucketName: !Ref EmailBucket
-              ObjectKeyPrefix: "inbox/"
-
-  # ---- Lambda function to serve inbox ----
-  InboxFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Runtime: python3.12
-      Handler: index.handler
-      Timeout: 15
-      MemorySize: 256
-      Architectures:
-        - arm64
-      Environment:
-        Variables:
-          BUCKET_NAME: !Ref EmailBucket
-          PREFIX: "inbox/"
-      Policies:
-        - S3ReadPolicy:
-            BucketName: !Ref EmailBucket
-        - Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action:
-                - s3:ListBucket
-              Resource: !GetAtt EmailBucket.Arn
-            - Effect: Allow
-              Action:
-                - s3:DeleteObject
-              Resource: !Sub "${EmailBucket.Arn}/*"
-      FunctionUrlConfig:
-        AuthType: NONE
-      InlineCode: |
-        import json, os, email
-        from email import policy
-        from datetime import datetime
-        import boto3
-        import urllib.parse
-
-        s3 = boto3.client("s3")
-        BUCKET = os.environ["BUCKET_NAME"]
-        PREFIX = os.environ["PREFIX"]
-
-        HTML_HEAD = """<!DOCTYPE html><html><head><meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>Temp Inbox</title>
-        <style>
-          body{font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:20px;background:#f5f5f5}
-          h1{color:#333} .email-card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px;
-          margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.1)} .meta{color:#666;font-size:.85em}
-          a{color:#0066cc} pre{white-space:pre-wrap;word-wrap:break-word}
-          .btn{display:inline-block;padding:8px 16px;background:#0066cc;color:#fff;
-          text-decoration:none;border-radius:4px;margin:4px} .btn.danger{background:#cc3333}
-          .empty{text-align:center;padding:40px;color:#999}
-        </style></head><body>"""
-
-        def list_emails():
-            resp = s3.list_objects_v2(Bucket=BUCKET, Prefix=PREFIX)
-            items = []
-            for obj in resp.get("Contents", []):
-                key = obj["Key"]
-                if key == PREFIX:
-                    continue
-                raw = s3.get_object(Bucket=BUCKET, Key=key)["Body"].read()
-                msg = email.message_from_bytes(raw, policy=policy.default)
-                items.append({
-                    "key": key,
-                    "subject": msg["subject"] or "(no subject)",
-                    "from": msg["from"] or "unknown",
-                    "date": msg["date"] or str(obj["LastModified"]),
-                    "size": obj["Size"],
-                })
-            items.sort(key=lambda x: x["date"], reverse=True)
-            return items
-
-        def get_email(key):
-            raw = s3.get_object(Bucket=BUCKET, Key=key)["Body"].read()
-            msg = email.message_from_bytes(raw, policy=policy.default)
-            body = ""
-            if msg.is_multipart():
-                for part in msg.walk():
-                    ct = part.get_content_type()
-                    if ct == "text/plain":
-                        body = part.get_content()
-                        break
-                    elif ct == "text/html" and not body:
-                        body = part.get_content()
-            else:
-                body = msg.get_content()
-            return {
-                "subject": msg["subject"] or "(no subject)",
-                "from": msg["from"] or "unknown",
-                "to": msg["to"] or "unknown",
-                "date": msg["date"] or "unknown",
-                "body": body,
-                "content_type": "text/html" if "<html" in str(body).lower() else "text/plain",
-            }
-
-        def delete_email(key):
-            s3.delete_object(Bucket=BUCKET, Key=key)
-
-        def handler(event, context):
-            path = event.get("rawPath", "/")
-            qs = event.get("queryStringParameters") or {}
-
-            if path == "/view" and "key" in qs:
-                key = urllib.parse.unquote(qs["key"])
-                em = get_email(key)
-                body_html = em["body"] if em["content_type"] == "text/html" else f"<pre>{em['body']}</pre>"
-                html = f"""{HTML_HEAD}<h1>📧 {em['subject']}</h1>
-                <div class="meta"><b>From:</b> {em['from']}<br><b>To:</b> {em['to']}<br>
-                <b>Date:</b> {em['date']}</div><hr>{body_html}
-                <br><a class="btn" href="/">← Back</a>
-                <a class="btn danger" href="/delete?key={urllib.parse.quote(key, safe='')}">🗑 Delete</a>
-                </body></html>"""
-                return {"statusCode": 200, "headers": {"Content-Type": "text/html"}, "body": html}
-
-            if path == "/delete" and "key" in qs:
-                delete_email(urllib.parse.unquote(qs["key"]))
-                return {"statusCode": 302, "headers": {"Location": "/"}, "body": ""}
-
-            # Inbox listing
-            emails = list_emails()
-            if not emails:
-                cards = '<div class="empty">📭 No emails yet. Send something!</div>'
-            else:
-                cards = ""
-                for em in emails:
-                    enc_key = urllib.parse.quote(em["key"], safe="")
-                    cards += f"""<div class="email-card">
-                    <a href="/view?key={enc_key}"><b>{em['subject']}</b></a>
-                    <div class="meta">From: {em['from']} | {em['date']}</div></div>"""
-            html = f"""{HTML_HEAD}<h1>📬 Temporary Inbox</h1>
-            <p class="meta">{len(emails)} message(s)</p>{cards}</body></html>"""
-            return {"statusCode": 200, "headers": {"Content-Type": "text/html"}, "body": html}
-
-Outputs:
-  InboxURL:
-    Description: "Public URL to access your inbox"
-    Value: !GetAtt InboxFunctionUrl.FunctionUrl
-  EmailAddress:
-    Description: "Send emails to this address"
-    Value: !Ref EmailAddress
-```
-
----
-
-## Deployment Steps
-
-```bash
-# 1. Prerequisites: AWS CLI + SAM CLI installed, domain with DNS access
-
-# 2. Deploy the stack
-sam deploy \
-  --template-file template.yaml \
-  --stack-name temp-email \
-  --parameter-overrides EmailAddress=inbox@mail.example.com \
-  --capabilities CAPABILITY_IAM \
-  --resolve-s3
-
-# 3. Set up DNS (one-time, manual)
-#    Add an MX record to your domain/subdomain:
-#    mail.example.com  MX  10  inbound-smtp.us-east-1.amazonaws.com
-
-# 4. Activate the SES Rule Set (one-time, via console or CLI)
-aws ses set-active-receipt-rule-set --rule-set-name temp-email-rule-set
-
-# 5. Open the inbox URL from the stack outputs
-```
-
----
-
-## Cost Estimate
-
-| Resource | Cost |
-|---|---|
-| **SES inbound** | Free (first 1,000 emails/month) |
-| **S3** | ~$0.00 (a few KB of email, 1-day lifecycle) |
-| **Lambda** | Free tier (1M requests/month free) |
-| **Lambda Function URL** | Free (no API Gateway) |
-| **Total for a few hours of PoC use** | **$0.00** |
-
----
-
-## Trade-offs & Notes
-
-| Consideration | Decision |
-|---|---|
-| **Domain required** | Yes — SES inbound requires a domain you control (even a cheap $3/year `.click` domain works). There is no way around this on AWS or Azure without running your own SMTP server. |
-| **No auth** | By design — Function URL is `AuthType: NONE`. Anyone with the URL can view the inbox. This is acceptable for a short-lived PoC. |
-| **No outbound** | Inbound only, as required. SES sending is not configured. |
-| **Single user** | The SES rule matches exactly one recipient address. |
-| **Scalability** | Not a concern — but this design would handle hundreds of emails without changes. |
-| **Security** | The Function URL is obscure (random AWS-generated hostname), but not secret. For a few-hours PoC this is fine. |
-| **Dependencies** | Only AWS SDK (boto3), which is pre-installed in the Lambda runtime. Zero external packages. |
-| **Cleanup** | `sam delete --stack-name temp-email` removes everything. S3 lifecycle handles email expiry automatically. |
-
-This gives you a **4-resource, single-file, zero-dependency** temporary email service deployable in under 2 minutes.
+> # Temporary Email Service — Solution Design
+> 
+> ## Overview
+> 
+> A minimal, one-click deployable temporary email service on **AWS** that provides a single inbound-only email inbox accessible via a public HTTPS endpoint. The design prioritizes simplicity, low cost, and minimal dependencies.
+> 
+> ---
+> 
+> ## Architecture
+> 
+> ```
+> ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+> │  Internet    │      │  AWS SES     │      │  S3 Bucket   │      │  Lambda +    │
+> │  (sender)    │─────▶│  (inbound)   │─────▶│  (email      │◀─────│  Function URL│
+> │              │      │              │      │   storage)   │      │  (inbox UI)  │
+> └──────────────┘      └──────────────┘      └──────────────┘      └──────────────┘
+>                                                                         ▲
+>                                                                         │ HTTPS
+>                                                                         │
+>                                                                   ┌─────┴──────┐
+>                                                                   │  Browser   │
+>                                                                   │  (user)    │
+>                                                                   └────────────┘
+> ```
+> 
+> ---
+> 
+> ## Components (4 total)
+> 
+> | Component | Purpose | Why |
+> |---|---|---|
+> | **AWS SES (Inbound)** | Receives emails on your domain | Free-tier inbound receiving; no server to run |
+> | **S3 Bucket** | Stores raw email files | Pennies of storage; no database needed |
+> | **Lambda + Function URL** | Serves the inbox UI over HTTPS | No API Gateway needed; Function URLs are free; no always-on server |
+> | **CloudFormation / SAM template** | One-click deploy | Single `sam deploy` or CloudFormation stack creation |
+> 
+> ### Why AWS over Azure?
+> 
+> - **AWS SES inbound email receiving** is a unique, low-cost managed service with no equivalent simplicity on Azure (Azure would require an MX relay VM or third-party service).
+> - Lambda Function URLs provide free, unauthenticated HTTPS endpoints — no API Gateway cost.
+> - All four components fit comfortably in the AWS free tier for this use case.
+> 
+> ---
+> 
+> ## How It Works
+> 
+> ### 1. Email Reception
+> - You configure a **domain** (or subdomain) with an MX record pointing to SES (e.g., `inbound-smtp.us-east-1.amazonaws.com`).
+> - SES has a **Receipt Rule** that matches a single recipient address (e.g., `inbox@tempmail.yourdomain.com`).
+> - The Receipt Rule action is **"Save to S3"** — SES writes the raw `.eml` to an S3 bucket with a unique key.
+> 
+> ### 2. Inbox Access
+> - A **Lambda function** (Python, ~100 lines) exposed via a **Function URL** (auth type `NONE`) serves a simple HTML page.
+> - On request, it lists objects in the S3 bucket, parses the raw MIME emails (Python's built-in `email` module), and renders a lightweight inbox view.
+> - Clicking an email shows the full body/headers.
+> 
+> ### 3. Cleanup
+> - The S3 bucket has a **lifecycle rule** (e.g., 1-day expiration) to auto-delete old emails.
+> - Or, the Lambda can expose a `/clear` endpoint to purge the inbox.
+> 
+> ---
+> 
+> ## Deployment (One-Click)
+> 
+> Everything is defined in a single **AWS SAM template**:
+> 
+> ```yaml name=template.yaml
+> AWSTemplateFormatVersion: '2010-09-09'
+> Transform: AWS::Serverless-2016-10-31
+> Description: Temporary single-user inbound email service
+> 
+> Parameters:
+>   EmailAddress:
+>     Type: String
+>     Description: "The full recipient email address (e.g. inbox@mail.example.com)"
+>   SESRuleSetName:
+>     Type: String
+>     Default: "temp-email-rule-set"
+>     Description: "Name for the SES Receipt Rule Set"
+> 
+> Resources:
+>   # ---- S3 Bucket for email storage ----
+>   EmailBucket:
+>     Type: AWS::S3::Bucket
+>     Properties:
+>       LifecycleConfiguration:
+>         Rules:
+>           - Id: AutoExpireEmails
+>             Status: Enabled
+>             ExpirationInDays: 1
+> 
+>   EmailBucketPolicy:
+>     Type: AWS::S3::BucketPolicy
+>     Properties:
+>       Bucket: !Ref EmailBucket
+>       PolicyDocument:
+>         Version: "2012-10-17"
+>         Statement:
+>           - Sid: AllowSESPut
+>             Effect: Allow
+>             Principal:
+>               Service: ses.amazonaws.com
+>             Action: s3:PutObject
+>             Resource: !Sub "${EmailBucket.Arn}/*"
+>             Condition:
+>               StringEquals:
+>                 "AWS:SourceAccount": !Ref "AWS::AccountId"
+> 
+>   # ---- SES Receipt Rule Set & Rule ----
+>   SESRuleSet:
+>     Type: AWS::SES::ReceiptRuleSet
+>     Properties:
+>       RuleSetName: !Ref SESRuleSetName
+> 
+>   SESReceiptRule:
+>     Type: AWS::SES::ReceiptRule
+>     DependsOn: EmailBucketPolicy
+>     Properties:
+>       RuleSetName: !Ref SESRuleSet
+>       Rule:
+>         Name: save-to-s3
+>         Enabled: true
+>         ScanEnabled: true
+>         Recipients:
+>           - !Ref EmailAddress
+>         Actions:
+>           - S3Action:
+>               BucketName: !Ref EmailBucket
+>               ObjectKeyPrefix: "inbox/"
+> 
+>   # ---- Lambda function to serve inbox ----
+>   InboxFunction:
+>     Type: AWS::Serverless::Function
+>     Properties:
+>       Runtime: python3.12
+>       Handler: index.handler
+>       Timeout: 15
+>       MemorySize: 256
+>       Architectures:
+>         - arm64
+>       Environment:
+>         Variables:
+>           BUCKET_NAME: !Ref EmailBucket
+>           PREFIX: "inbox/"
+>       Policies:
+>         - S3ReadPolicy:
+>             BucketName: !Ref EmailBucket
+>         - Version: "2012-10-17"
+>           Statement:
+>             - Effect: Allow
+>               Action:
+>                 - s3:ListBucket
+>               Resource: !GetAtt EmailBucket.Arn
+>             - Effect: Allow
+>               Action:
+>                 - s3:DeleteObject
+>               Resource: !Sub "${EmailBucket.Arn}/*"
+>       FunctionUrlConfig:
+>         AuthType: NONE
+>       InlineCode: |
+>         import json, os, email
+>         from email import policy
+>         from datetime import datetime
+>         import boto3
+>         import urllib.parse
+> 
+>         s3 = boto3.client("s3")
+>         BUCKET = os.environ["BUCKET_NAME"]
+>         PREFIX = os.environ["PREFIX"]
+> 
+>         HTML_HEAD = """<!DOCTYPE html><html><head><meta charset="utf-8">
+>         <meta name="viewport" content="width=device-width,initial-scale=1">
+>         <title>Temp Inbox</title>
+>         <style>
+>           body{font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:20px;background:#f5f5f5}
+>           h1{color:#333} .email-card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px;
+>           margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.1)} .meta{color:#666;font-size:.85em}
+>           a{color:#0066cc} pre{white-space:pre-wrap;word-wrap:break-word}
+>           .btn{display:inline-block;padding:8px 16px;background:#0066cc;color:#fff;
+>           text-decoration:none;border-radius:4px;margin:4px} .btn.danger{background:#cc3333}
+>           .empty{text-align:center;padding:40px;color:#999}
+>         </style></head><body>"""
+> 
+>         def list_emails():
+>             resp = s3.list_objects_v2(Bucket=BUCKET, Prefix=PREFIX)
+>             items = []
+>             for obj in resp.get("Contents", []):
+>                 key = obj["Key"]
+>                 if key == PREFIX:
+>                     continue
+>                 raw = s3.get_object(Bucket=BUCKET, Key=key)["Body"].read()
+>                 msg = email.message_from_bytes(raw, policy=policy.default)
+>                 items.append({
+>                     "key": key,
+>                     "subject": msg["subject"] or "(no subject)",
+>                     "from": msg["from"] or "unknown",
+>                     "date": msg["date"] or str(obj["LastModified"]),
+>                     "size": obj["Size"],
+>                 })
+>             items.sort(key=lambda x: x["date"], reverse=True)
+>             return items
+> 
+>         def get_email(key):
+>             raw = s3.get_object(Bucket=BUCKET, Key=key)["Body"].read()
+>             msg = email.message_from_bytes(raw, policy=policy.default)
+>             body = ""
+>             if msg.is_multipart():
+>                 for part in msg.walk():
+>                     ct = part.get_content_type()
+>                     if ct == "text/plain":
+>                         body = part.get_content()
+>                         break
+>                     elif ct == "text/html" and not body:
+>                         body = part.get_content()
+>             else:
+>                 body = msg.get_content()
+>             return {
+>                 "subject": msg["subject"] or "(no subject)",
+>                 "from": msg["from"] or "unknown",
+>                 "to": msg["to"] or "unknown",
+>                 "date": msg["date"] or "unknown",
+>                 "body": body,
+>                 "content_type": "text/html" if "<html" in str(body).lower() else "text/plain",
+>             }
+> 
+>         def delete_email(key):
+>             s3.delete_object(Bucket=BUCKET, Key=key)
+> 
+>         def handler(event, context):
+>             path = event.get("rawPath", "/")
+>             qs = event.get("queryStringParameters") or {}
+> 
+>             if path == "/view" and "key" in qs:
+>                 key = urllib.parse.unquote(qs["key"])
+>                 em = get_email(key)
+>                 body_html = em["body"] if em["content_type"] == "text/html" else f"<pre>{em['body']}</pre>"
+>                 html = f"""{HTML_HEAD}<h1>📧 {em['subject']}</h1>
+>                 <div class="meta"><b>From:</b> {em['from']}<br><b>To:</b> {em['to']}<br>
+>                 <b>Date:</b> {em['date']}</div><hr>{body_html}
+>                 <br><a class="btn" href="/">← Back</a>
+>                 <a class="btn danger" href="/delete?key={urllib.parse.quote(key, safe='')}">🗑 Delete</a>
+>                 </body></html>"""
+>                 return {"statusCode": 200, "headers": {"Content-Type": "text/html"}, "body": html}
+> 
+>             if path == "/delete" and "key" in qs:
+>                 delete_email(urllib.parse.unquote(qs["key"]))
+>                 return {"statusCode": 302, "headers": {"Location": "/"}, "body": ""}
+> 
+>             # Inbox listing
+>             emails = list_emails()
+>             if not emails:
+>                 cards = '<div class="empty">📭 No emails yet. Send something!</div>'
+>             else:
+>                 cards = ""
+>                 for em in emails:
+>                     enc_key = urllib.parse.quote(em["key"], safe="")
+>                     cards += f"""<div class="email-card">
+>                     <a href="/view?key={enc_key}"><b>{em['subject']}</b></a>
+>                     <div class="meta">From: {em['from']} | {em['date']}</div></div>"""
+>             html = f"""{HTML_HEAD}<h1>📬 Temporary Inbox</h1>
+>             <p class="meta">{len(emails)} message(s)</p>{cards}</body></html>"""
+>             return {"statusCode": 200, "headers": {"Content-Type": "text/html"}, "body": html}
+> 
+> Outputs:
+>   InboxURL:
+>     Description: "Public URL to access your inbox"
+>     Value: !GetAtt InboxFunctionUrl.FunctionUrl
+>   EmailAddress:
+>     Description: "Send emails to this address"
+>     Value: !Ref EmailAddress
+> ```
+> 
+> ---
+> 
+> ## Deployment Steps
+> 
+> ```bash
+> # 1. Prerequisites: AWS CLI + SAM CLI installed, domain with DNS access
+> 
+> # 2. Deploy the stack
+> sam deploy \
+>   --template-file template.yaml \
+>   --stack-name temp-email \
+>   --parameter-overrides EmailAddress=inbox@mail.example.com \
+>   --capabilities CAPABILITY_IAM \
+>   --resolve-s3
+> 
+> # 3. Set up DNS (one-time, manual)
+> #    Add an MX record to your domain/subdomain:
+> #    mail.example.com  MX  10  inbound-smtp.us-east-1.amazonaws.com
+> 
+> # 4. Activate the SES Rule Set (one-time, via console or CLI)
+> aws ses set-active-receipt-rule-set --rule-set-name temp-email-rule-set
+> 
+> # 5. Open the inbox URL from the stack outputs
+> ```
+> 
+> ---
+> 
+> ## Cost Estimate
+> 
+> | Resource | Cost |
+> |---|---|
+> | **SES inbound** | Free (first 1,000 emails/month) |
+> | **S3** | ~$0.00 (a few KB of email, 1-day lifecycle) |
+> | **Lambda** | Free tier (1M requests/month free) |
+> | **Lambda Function URL** | Free (no API Gateway) |
+> | **Total for a few hours of PoC use** | **$0.00** |
+> 
+> ---
+> 
+> ## Trade-offs & Notes
+> 
+> | Consideration | Decision |
+> |---|---|
+> | **Domain required** | Yes — SES inbound requires a domain you control (even a cheap $3/year `.click` domain works). There is no way around this on AWS or Azure without running your own SMTP server. |
+> | **No auth** | By design — Function URL is `AuthType: NONE`. Anyone with the URL can view the inbox. This is acceptable for a short-lived PoC. |
+> | **No outbound** | Inbound only, as required. SES sending is not configured. |
+> | **Single user** | The SES rule matches exactly one recipient address. |
+> | **Scalability** | Not a concern — but this design would handle hundreds of emails without changes. |
+> | **Security** | The Function URL is obscure (random AWS-generated hostname), but not secret. For a few-hours PoC this is fine. |
+> | **Dependencies** | Only AWS SDK (boto3), which is pre-installed in the Lambda runtime. Zero external packages. |
+> | **Cleanup** | `sam delete --stack-name temp-email` removes everything. S3 lifecycle handles email expiry automatically. |
+> 
+> This gives you a **4-resource, single-file, zero-dependency** temporary email service deployable in under 2 minutes.
 
 </details>
 
