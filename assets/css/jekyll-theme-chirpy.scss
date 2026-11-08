@@ -1,0 +1,15 @@
+---
+---
+
+@import 'main';
+
+.content .table-wrapper > table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.content .table-wrapper th,
+.content .table-wrapper td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
