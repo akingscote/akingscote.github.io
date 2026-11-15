@@ -173,8 +173,6 @@ If I'm monitoring all this activity, and the vast amount of signals I'd need to 
 
 The easy answer is to stop all outside access, but what if you need outside access. What if youre trying to run an authorized red teaming activity against Salesforce? Mocks and offline copies are the easy answer, but you're never going to have true fidelity unless you run against the real thing. Is the risk of that extra fidelity worth any additional insights and assurances you might gain.
 
-What if I'm running an authorised red-team activity against Salesforce? Mocks are an easy answer, but they won't necessarily give me the fidelity of the real thing. Is the extra fidelity worth the additional risk, and what extra insight am I actually getting?
-
 OpenAI recently (23rd October 2026) talked about their [new approach to model containment](https://openai.com/index/securing-our-frontier-model-training-environment/#:~:text=Our%20new%20approach%20to%20model%20containment,-Our), and how they essentially have "mocked the internet".
 
 ### L5 ~~Credential management~~ Data protection
