@@ -438,6 +438,8 @@ The gVisor docs also explicitly call out [what gVisor **is not**](What isn't gVi
 
 For monitoring, can capture application-level syscall activity inside gVisor through its runtime monitoring interface. So this covers things like detecting unexpected shells, access to sensitive files or suspicious network connections. This interface is [SecCheck](https://github.com/google/gvisor/blob/master/pkg/sentry/seccheck/README.md) and streams application syscall and lifecycle events to an external monitoring process. There are Go and C++ receiver examples, and you have to roll your own integration into a SIEM.
 
+UPDATE: four days after I posted this blog, gvisor released [this blog](https://gvisor.dev/blog/2026/11/12/checkpoint-restore), reminding everyone that they have the functionality to save the full state of a gvisor sandbox to files. Every process, file, socket, memory. This is incredible functionality, and goes a long way towards my forensics requirements!
+
 ### Web Assembly
 [WebAssembly](https://webassembly.org/docs/security/), usually shortened to Wasm, is a portable binary instruction format that runs inside a compatible runtime. Code written in languages like C, C++ or Rust can be compiled to Wasm and executed in a browser, or outside one using runtimes like Wasmtime. Despite the name, it isn’t exclusively a web technology. Years ago I remember [this video being sent around](https://www.youtube.com/watch?v=3LWgbjVWLug), suggesting it was going to be the next big thing, which hasnt really taken off.
 
@@ -520,6 +522,8 @@ The output is packet-level evidence in standard PCAPng (pcap next-generation) fi
 For AI sandboxes running in Kubernetes, this could help investigate unexpected outbound connections, visible DNS queries, unusual transfers or failures when an agent contacts an external service. Selecting workloads by labels makes it practical to scope captures to a particular sandbox, provided those labels reliably identify its execution. But this is all detection, not a preventiative control.
 
 Capture files might also contain can contain credentials, prompts and other sensitive data. So you'd need to carefully consider scope, access control and retention of the outputs.
+
+Unfortunately its a commerical offering and is enterprise-only. I suspect similar functionality can be achieved with Cilium.
 
 ### Falco
 [Falco](https://falco.org/) is an open-source runtime threat-detection and monitoring tool, originally created by Sysdig and now a graduated CNCF project. It observes activity while workloads execute and generates alerts when that activity matches security rules. 
@@ -646,6 +650,9 @@ The security model includes policy-controlled outbound networking and host-side 
 
 Local sandbox compute and the CLI are free, including commercial use. Cloud compute and central organisation governance are paid, and cloud policies must be configured separately from local policies.
 
+### nono
+[nono.sh](https://nono.sh/) is an open-source (apache 2.0 licensed) runtime tool. Its just a single binary, which provides its own ephemeral sand
+
 ## Policy Engines
 I've put these into their own section, because they are kind of agnostic tools that could be used in conjunction with some of the above to create an agnostic policy mechanism. 
 
@@ -679,21 +686,21 @@ This took waaaaaay longer to write than I expected, so I dont expect to get any 
 
 **What**
 
-1. AKS Dedicated linux nodes on Azure (not shared with other customers)
+1. AKS Dedicated linux nodes on Azure (not shared with other customers). Although dedicated nodes are huge and expensive, so that might be opt in.
 2. Secure boot enabled
-3. eBPF configured, with tetragon and cilium throughout. Security policies managed independently (OPA likely), network policies. TLS inspection, isopcap network capture.
-4. gvisior running on top of eBPF node. It sounds like overkill but I think they can complement each other and provide defense in depth. I'd potentially have to create custom processor for gvisor runtime logs, as falco integration is dead now.
+3. eBPF configured, with tetragon and cilium throughout. Security policies managed independently (OPA likely), network policies. TLS inspection, ~~isopcap network capture~~ cilium powered network capture.
+4. gvisior running on top of eBPF node. It sounds like overkill but I think they can complement each other and provide defense in depth. I'd potentially have to create custom processor for gvisor runtime logs, as falco integration is dead now. I'd be sure to use gvisors snapshot-type functionality regularly to assist with forensics. I'd also learn from what the `tracepod` folks are doing.
 5. Leverage lessons like the secrets being injected from outside the sandbox
-6. Centralised policy management, including IP monitoring
-7. Container fingerprinting inspired by tracepod. build up a SBOM equivelant for monitoring. memory and filesystem snapshots (im not sure how just yet...)
+6. Centralised policy management, including IP monitoring/
+7. Container fingerprinting inspired by tracepod. build up a SBOM equivelant for monitoring. memory and filesystem snapshots via the [gvisor snapshotting](https://gvisor.dev/blog/2026/11/12/checkpoint-restore/).
 8. Sensible preventative controls, comprehensive detection controls, and create a pipeline into a central policy engine and feedback loop.
 9. Forensic investigation capability, memory dump, packet inspection etc...
 
 **Why**
 I'd essentially love to see what works and what doesnt work, and create an essential straight jacket for an AI swarm. 
 I'd hope to learn about any gaps, and iterate recursively on it.
-It would create a scalable, secure, dynamic and fine-tined harness.
+It would create a scalable, secure, dynamic and fine-tuned harness.
 
 # Abrupt sign off
-Apologies for the abrupt sign off here, it's taken literally days to write this. I'll possibly/maybe/never edit and tidy up this ending in the future 
+Apologies for the abrupt sign off here, it's taken literally days to write this, and you can probably tell i've ran out of steam towards the end here. I'll possibly/maybe/never edit and tidy up this ending in the future 
 
