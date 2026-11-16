@@ -605,12 +605,12 @@ Controls include ingress and egress network policies, private endpoints, scoped 
 The controller manages the underlying pod, stable network identity, persistent storage and lifecycle. Additional resources provide reusable templates, allocation requests and prewarmed pools, reducing the delay before an agent receives an environment. The pod's Kubernetes `RuntimeClass` selects the actual sandbox runtime. Supported examples include gVisor’s userspace-kernel isolation and Kata Containers' VM-based isolation with a dedicated guest kernel. neat.
 
 ### AI Security Institute (AISI) - Inspect Sandboxing tool kit
-The [AISI Inspect sandboxing tool kit](https://www.aisi.gov.uk/blog/the-inspect-sandboxing-toolkit-scalable-and-secure-ai-agent-evaluations) is an open-source collection of sandbox providers and technical guidance from the UK AI Security Institute. It integrates execution environments with [Inspect](https://inspect.aisi.org.uk/), the AISI's framework for evaluating AI capabilities. So **this is really geared towards evals rather than sandboxing specifically**, but there are some useful snippets that you could re-purpose for general sandboxing.
+The [AISI Inspect sandboxing tool kit](https://www.aisi.gov.uk/blog/the-inspect-sandboxing-toolkit-scalable-and-secure-ai-agent-evaluations) is an open-source collection of sandbox providers and technical guidance from the UK AI Security Institute. It integrates execution environments with [Inspect](https://inspect.aisi.org.uk/), the AISI's framework for evaluating AI capabilities. So **this is really geared towards evaluations rather than sandboxing specifically**, but there are some useful snippets that you could re-purpose for general sandboxing.
 
 The toolkit includes three providers:
 • Docker Compose: multi-container evaluation environments using container isolation.
 • Kubernetes: distributed execution, with gVisor enabled by default in the provider and Cilium NetworkPolicies available for fine-grained network control.
-• Proxmox: virtual-machine environments using Proxmox’s QEMU/KVM infrastructure, providing separate guest kernels.
+• Proxmox: virtual-machine environments using Proxmox's QEMU/KVM infrastructure, providing separate guest kernels.
 
 Its accompanying guidance considers three independent dimensions:
 - tooling isolation
@@ -651,12 +651,14 @@ The security model includes policy-controlled outbound networking and host-side 
 Local sandbox compute and the CLI are free, including commercial use. Cloud compute and central organisation governance are paid, and cloud policies must be configured separately from local policies.
 
 ### nono
-[nono.sh](https://nono.sh/) is an open-source (apache 2.0 licensed) runtime tool. Its just a single binary, which provides its own ephemeral sand
+[nono.sh](https://nono.sh/) is an open-source (apache 2.0 licensed) local agent and tool sandbox. Its just a single binary (rust based). It uses Linux Landlock or macOS Seatbelt to enforce filesystem and network restrictions, while an external proxy can inject credentials without exposing them to the agent. Features include per-tool permissions, reusable security profiles, verification of signed skills and instructions, tamper evident audit logs, and file rollback.
+
+[Datadog have a great post](https://securitylabs.datadoghq.com/articles/guarddog-3-0-release/#built-in-sandboxing-with-nono-py-for-defense-in-depth) on integrating with their [GuardDog supply chain cli too](https://github.com/DataDog/guarddog)l.
 
 ## Policy Engines
 I've put these into their own section, because they are kind of agnostic tools that could be used in conjunction with some of the above to create an agnostic policy mechanism. 
 
-What I like about standalone policy engines, is the seperation of authorizaiton policies from whatever system is implementing them. 
+What I like about standalone policy engines, is the separation of authorisation policies from whatever system is implementing them. 
 
 ### Kyverno
 [Kyverno](https://kyverno.io/) is an [open-source](https://github.com/kyverno/kyverno), cloud-native policy engine. It is Kubernetes-first, although it also supports policy evaluation outside Kubernetes. Policies are declared using YAML resources, with pattern matching capabilities.
@@ -665,7 +667,7 @@ In Kubernetes, Kyverno operates as an admission controller. So the API server se
 
 For agent sandboxes, this *could* mean rejecting privileged containers, requiring a particular `RuntimeClass`, enforcing security settings and resource limits, or generating namespace `NetworkPolicies`. Policies can block non-compliant admission requests or report violations without blocking, allowing requirements to be introduced gradually, and pipe into a feedback loop for defining new policies. Copilot tells me can also integrate Kyverno with Tetragon and Cilium, so you can have a generic policy engine for a bunch of different use cases, but enforcement would remain by Tetragon and Cilium.
  
-Kyverno also offers CLI-based checks for manifests and other structured configuration, an SDK, and an authorization server for HTTP proxies and Envoy. These provide integration points beyond Kubernetes deployment governance.
+Kyverno also offers CLI-based checks for manifests and other structured configuration, an SDK, and an authorisation server for HTTP proxies and Envoy. These provide integration points beyond Kubernetes deployment governance.
 
 I think it could be really cool to integrate with something like [Crossplane](https://www.crossplane.io/) so all resources everything is defined in the same method, and lives in the same place.
 
