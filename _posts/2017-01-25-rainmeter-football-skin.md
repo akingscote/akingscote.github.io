@@ -152,6 +152,8 @@ Text=Newcastle United
 
 I’m using fixtures that start in the next 30 days because i don’t want a massive plugin that takes up half the page. Three or four fixtures are more than enough. If you cant find the team you are after you can:
 
+> **Update:** The legacy `http://api.football-data.org/v1/` endpoints below have been retired (`HTTP 410 Gone`). If you need a free, keyless JSON API for Premier League and EFL fixtures/standings in Rainmeter without an auth token header, see the [Football Charts Keyless API](https://www.football-charts.com/developers).
+
 Firstly, find the ID for the competition you are after by looking at http://api.football-data.org/v1/competitions/ 
 
 Then, paste the ID in this link http://api.football-data.org/v1/competitions//leagueTable e.g. http://api.football-data.org/v1/competitions/427/leagueTable then press CTRL-F and search for your team (e.g. Wolverhampton) then find their Team ID:
